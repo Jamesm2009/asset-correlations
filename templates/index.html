@@ -8,36 +8,30 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:        #f4f6fb;
-  --surface:   #ffffff;
-  --surface2:  #f8fafc;
-  --border:    #e2e8f2;
-  --border2:   #c8d4e8;
-  --text:      #0f1a2e;
-  --text2:     #4a5568;
-  --text3:     #8898aa;
-  --accent:    #1a56db;
-  --accent2:   #1347bf;
-  --gold:      #b45309;
-  --mono:      'DM Mono', monospace;
-  --sans:      'Sora', sans-serif;
-
-  /* Correlation colour scale */
-  --c-hi:   #053061;   /* +1.0  deep blue */
-  --c-mid:  #f7f7f7;   /* 0.0   white/neutral */
-  --c-lo:   #67001f;   /* -1.0  deep red */
-
+  --bg:       #f4f6fb;
+  --surface:  #ffffff;
+  --surface2: #f8fafc;
+  --border:   #e2e8f2;
+  --border2:  #c8d4e8;
+  --text:     #0f1a2e;
+  --text2:    #4a5568;
+  --text3:    #8898aa;
+  --accent:   #1a56db;
+  --mono:     'DM Mono', monospace;
+  --sans:     'Sora', sans-serif;
   --header-h: 58px;
   --tab-h:    42px;
+  --ctrl-h:   50px;
 }
-
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+html, body { height: 100%; }
 body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--sans);
   font-size: 13px;
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
 }
 
@@ -50,16 +44,13 @@ header {
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 12px rgba(0,0,0,.2);
   position: sticky;
   top: 0;
-  z-index: 100;
-  box-shadow: 0 2px 12px rgba(0,0,0,.18);
+  z-index: 200;
 }
-.h-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+.h-brand { display: flex; align-items: center; gap: 10px; }
 .h-brand .logo {
   width: 30px; height: 30px;
   background: var(--accent);
@@ -67,36 +58,17 @@ header {
   display: flex; align-items: center; justify-content: center;
   font-size: 15px;
 }
-.h-brand h1 {
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: -.2px;
-  color: #fff;
-}
-.h-brand .sub {
-  font-size: 10.5px;
-  color: #94a3b8;
-  font-weight: 400;
-}
-.h-meta {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 11px;
-  color: #94a3b8;
-}
+.h-brand h1 { font-size: 15px; font-weight: 700; color: #fff; }
+.h-brand .sub { font-size: 10.5px; color: #94a3b8; }
+.h-meta { display: flex; align-items: center; gap: 12px; font-size: 11px; color: #94a3b8; }
 .h-meta b { color: #e2e8f0; }
 .btn-sm {
   background: rgba(255,255,255,.1);
   border: 1px solid rgba(255,255,255,.18);
-  color: #e2e8f0;
-  border-radius: 6px;
-  padding: 5px 12px;
-  font-size: 11px;
-  font-family: var(--sans);
-  cursor: pointer;
-  text-decoration: none;
-  transition: background .15s;
+  color: #e2e8f0; border-radius: 6px;
+  padding: 5px 12px; font-size: 11px;
+  font-family: var(--sans); cursor: pointer;
+  text-decoration: none; transition: background .15s;
 }
 .btn-sm:hover { background: rgba(255,255,255,.2); }
 
@@ -105,113 +77,162 @@ header {
   height: var(--tab-h);
   background: var(--surface);
   border-bottom: 2px solid var(--border);
-  display: flex;
-  align-items: flex-end;
+  display: flex; align-items: flex-end;
   padding: 0 20px;
-  gap: 0;
+  flex-shrink: 0;
   position: sticky;
   top: var(--header-h);
-  z-index: 90;
+  z-index: 190;
 }
 .tab {
-  padding: 0 18px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--text3);
-  cursor: pointer;
+  padding: 0 18px; height: 40px;
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12.5px; font-weight: 600;
+  color: var(--text3); cursor: pointer;
   border-bottom: 2px solid transparent;
   margin-bottom: -2px;
   transition: color .15s, border-color .15s;
-  user-select: none;
-  white-space: nowrap;
+  user-select: none; white-space: nowrap;
 }
 .tab:hover { color: var(--accent); }
-.tab.active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
-}
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 .tab .ico { font-size: 14px; }
 
-/* ── Page panels ── */
+/* ── Panels ── */
 .panel { display: none; }
-.panel.active { display: block; }
+.panel.active { display: flex; flex-direction: column; }
 
 /* ── Controls bar ── */
 .controls {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
-  padding: 10px 20px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-.ctrl-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  padding: 8px 20px;
+  display: flex; align-items: center; gap: 16px;
+  flex-wrap: wrap; flex-shrink: 0;
+  position: sticky;
+  top: calc(var(--header-h) + var(--tab-h));
+  z-index: 180;
 }
 .ctrl-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text3);
-  text-transform: uppercase;
-  letter-spacing: .5px;
+  font-size: 11px; font-weight: 600;
+  color: var(--text3); text-transform: uppercase; letter-spacing: .5px;
 }
-
-/* Toggle switch style for window */
 .window-toggle {
-  display: flex;
-  background: var(--bg);
+  display: flex; background: var(--bg);
   border: 1px solid var(--border2);
-  border-radius: 8px;
-  padding: 2px;
-  gap: 2px;
+  border-radius: 8px; padding: 2px; gap: 2px;
 }
 .window-btn {
-  padding: 5px 16px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  font-family: var(--sans);
-  border: none;
-  cursor: pointer;
-  background: none;
-  color: var(--text2);
-  transition: background .15s, color .15s;
+  padding: 5px 16px; border-radius: 6px;
+  font-size: 12px; font-weight: 600;
+  font-family: var(--sans); border: none;
+  cursor: pointer; background: none;
+  color: var(--text2); transition: background .15s, color .15s;
 }
 .window-btn.active {
-  background: var(--accent);
-  color: #fff;
+  background: var(--accent); color: #fff;
   box-shadow: 0 2px 6px rgba(26,86,219,.3);
 }
-
 .info-badge {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 5px 12px;
-  font-size: 11px;
-  color: var(--text2);
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 12px;
+  font-size: 11px; color: var(--text2);
 }
 .info-badge b { color: var(--text); }
+.corr-legend {
+  margin-left: auto; display: flex;
+  align-items: center; gap: 6px;
+  font-size: 10px; color: var(--text3);
+}
+.legend-bar {
+  height: 10px; width: 180px; border-radius: 3px;
+  background: linear-gradient(to right, #053061, #4393c3, #f7f7f7, #d6604d, #67001f);
+  border: 1px solid var(--border);
+}
 
-/* Loading overlay */
+/* ── Heatmap panel layout ── */
+#panel-heatmap {
+  /* fills remaining viewport height so the inner scroll works */
+  flex: 1;
+  min-height: 0;
+}
+.heatmap-outer {
+  flex: 1;
+  overflow: auto;
+  padding: 12px 16px 24px;
+  /* This single scrollable div handles BOTH x and y scroll.
+     Sticky works because the scroll context is this div, not the window. */
+}
+
+/* ── Heatmap table ── */
+#heatmap-table {
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  /* Do NOT set a width — let it be as wide as needed */
+}
+#heatmap-table th,
+#heatmap-table td { padding: 0; white-space: nowrap; }
+
+/* Row label (sticky left) */
+.hl {
+  padding: 3px 10px 3px 2px;
+  font-size: 10.5px; font-weight: 700;
+  color: var(--text); text-align: right;
+  cursor: default;
+  position: sticky; left: 0; z-index: 10;
+  background: var(--bg);
+  /* Shadow creates visible separator so cells don't bleed under the label */
+  box-shadow: 3px 0 8px -2px rgba(0,0,0,.14);
+}
+
+/* Column label (sticky top) */
+.cl {
+  padding: 2px 0 4px;
+  font-size: 9.5px; font-weight: 700;
+  color: var(--text); text-align: center;
+  vertical-align: bottom; min-width: 32px;
+  position: sticky; top: 0; z-index: 15;
+  background: var(--bg);
+  box-shadow: 0 3px 6px -2px rgba(0,0,0,.1);
+}
+/* Corner cell: sticky in both directions */
+thead th.hl {
+  position: sticky; left: 0; top: 0;
+  z-index: 20; background: var(--bg);
+}
+.cl span {
+  display: inline-block;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  height: 52px; cursor: default;
+}
+
+/* Heatmap cells */
+.hm-cell {
+  width: 32px; height: 28px;
+  text-align: center; vertical-align: middle;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,.5);
+  transition: transform .1s, box-shadow .1s;
+  font-size: 9px; font-weight: 400;
+}
+.hm-cell:hover {
+  transform: scale(1.18); z-index: 30;
+  box-shadow: 0 2px 10px rgba(0,0,0,.2);
+  border-color: rgba(0,0,0,.3);
+}
+.hm-cell.self { cursor: default; opacity: .35; }
+.hm-cell.self:hover { transform: none; box-shadow: none; }
+
+/* ── Loading overlay ── */
 #loading-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(244,246,251,.88);
+  position: fixed; inset: 0;
+  background: rgba(244,246,251,.9);
   backdrop-filter: blur(4px);
   z-index: 999;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 16px;
 }
 #loading-overlay.hidden { display: none; }
 .spinner {
@@ -225,418 +246,237 @@ header {
 .loading-text { font-size: 14px; font-weight: 600; color: var(--text2); }
 .loading-sub  { font-size: 12px; color: var(--text3); }
 
-/* ── Heatmap ── */
-.heatmap-container {
-  padding: 16px 20px 32px;
-  overflow-x: auto;
-  /* Show scrollbar at top so user doesn't need to scroll to bottom first */
-  transform: rotateX(180deg);
-}
-.heatmap-scroll {
-  overflow: visible;
-  transform: rotateX(180deg);
-}
-#heatmap-table {
-  border-collapse: collapse;
-  font-family: var(--mono);
-  font-size: 10.5px;
-}
-#heatmap-table th,
-#heatmap-table td {
-  padding: 0;
-  white-space: nowrap;
-}
-
-/* Row/col label */
-.hl { /* header label */
-  padding: 3px 10px 3px 2px;
-  font-size: 10.5px;
-  font-weight: 700;
-  color: var(--text);
-  text-align: right;
-  cursor: default;
-  position: sticky;
-  left: 0;
-  background: var(--bg);
-  z-index: 10;
-  box-shadow: 2px 0 6px rgba(0,0,0,.08);
-}
-.cl { /* column label */
-  padding: 2px 0 4px;
-  font-size: 9.5px;
-  font-weight: 700;
-  color: var(--text);
-  text-align: center;
-  vertical-align: bottom;
-  min-width: 32px;
-  position: sticky;
-  top: 0;
-  background: var(--bg);
-  z-index: 15;
-}
-/* Corner cell needs both sticky behaviours */
-thead .hl {
-  position: sticky;
-  left: 0;
-  top: 0;
-  z-index: 20;
-  background: var(--bg);
-}
-.cl span {
-  display: inline-block;
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-  height: 54px;
-  cursor: default;
-}
-
-/* Heatmap cells */
-.hm-cell {
-  width: 32px;
-  height: 28px;
-  text-align: center;
-  vertical-align: middle;
-  cursor: pointer;
-  border: 1px solid rgba(255,255,255,.6);
-  transition: transform .1s, box-shadow .1s;
-  position: relative;
-  font-size: 9px;
-  font-weight: 400;
-}
-.hm-cell:hover {
-  transform: scale(1.15);
-  z-index: 20;
-  box-shadow: 0 2px 10px rgba(0,0,0,.18);
-  border-color: rgba(0,0,0,.3);
-}
-.hm-cell.self {
-  cursor: default;
-  opacity: .4;
-}
-.hm-cell.self:hover { transform: none; box-shadow: none; }
-
 /* ── Lightbox ── */
 #lightbox {
-  position: fixed;
-  inset: 0;
-  background: rgba(15,26,46,.55);
+  position: fixed; inset: 0;
+  background: rgba(15,26,46,.5);
   backdrop-filter: blur(4px);
   z-index: 500;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   animation: fadeIn .18s ease;
 }
 #lightbox.hidden { display: none; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
 .lb-card {
   background: var(--surface);
   border-radius: 14px;
   box-shadow: 0 20px 60px rgba(0,0,0,.22);
-  width: min(760px, 94vw);
-  max-height: 90vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  width: min(760px, 94vw); max-height: 90vh;
+  overflow: hidden; display: flex; flex-direction: column;
   animation: slideUp .2s ease;
 }
-@keyframes slideUp { from { transform: translateY(18px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
+@keyframes slideUp {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
 .lb-header {
   padding: 16px 20px 12px;
   border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 12px;
 }
-.lb-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text);
-}
-.lb-subtitle {
-  font-size: 11.5px;
-  color: var(--text3);
-  margin-top: 3px;
-}
+.lb-title { font-size: 16px; font-weight: 700; }
+.lb-subtitle { font-size: 11.5px; color: var(--text3); margin-top: 3px; }
 .lb-close {
   width: 30px; height: 30px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--surface2);
-  cursor: pointer;
-  font-size: 16px;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--text2);
-  flex-shrink: 0;
-  transition: background .15s;
+  border-radius: 8px; border: 1px solid var(--border);
+  background: var(--surface2); cursor: pointer;
+  font-size: 16px; display: flex; align-items: center; justify-content: center;
+  color: var(--text2); flex-shrink: 0; transition: background .15s;
 }
 .lb-close:hover { background: var(--border); }
-
-.lb-body {
-  padding: 16px 20px 20px;
-  flex: 1;
-  overflow: auto;
-}
-
-.lb-stats {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
-}
+.lb-body { padding: 16px 20px 20px; flex: 1; overflow: auto; }
+.lb-stats { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
 .lb-stat {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 14px;
-  min-width: 100px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 14px; min-width: 100px;
 }
 .lb-stat .sv { font-size: 18px; font-weight: 700; font-family: var(--mono); }
 .lb-stat .sl { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+#chart-canvas-wrap { position: relative; height: 300px; }
 
-#chart-canvas-wrap {
-  position: relative;
-  height: 300px;
-}
-
-/* ── How To Use ── */
-.how-to {
-  max-width: 820px;
-  margin: 32px auto;
+/* ── Compare tab ── */
+.compare-wrap {
+  max-width: 860px; margin: 28px auto;
   padding: 0 20px 48px;
 }
-.how-section {
+.compare-search {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 24px 28px;
+  padding: 22px 24px;
   margin-bottom: 20px;
 }
-.how-section h2 {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.compare-search h2 { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+.compare-row {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
 }
-.how-section h2 .ico { font-size: 18px; }
-.how-section p {
-  font-size: 13px;
-  color: var(--text2);
-  line-height: 1.65;
-  margin-bottom: 10px;
+.compare-input-wrap { position: relative; }
+.compare-input {
+  width: 120px; padding: 9px 14px;
+  border: 2px solid var(--border2);
+  border-radius: 8px; font-size: 14px;
+  font-family: var(--mono); font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text); background: var(--surface);
+  outline: none; transition: border-color .15s;
 }
-.how-section p:last-child { margin-bottom: 0; }
-.how-section ul {
-  padding-left: 18px;
-  color: var(--text2);
-  font-size: 13px;
-  line-height: 1.8;
+.compare-input:focus { border-color: var(--accent); }
+.compare-vs {
+  font-size: 16px; font-weight: 700;
+  color: var(--text3); padding: 0 4px;
 }
-.how-section code {
-  background: var(--bg);
+.compare-btn {
+  padding: 9px 22px;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: 8px;
+  font-size: 13px; font-weight: 700;
+  font-family: var(--sans); cursor: pointer;
+  transition: background .15s;
+}
+.compare-btn:hover { background: #1347bf; }
+.compare-hint {
+  font-size: 11px; color: var(--text3);
+  margin-top: 10px;
+}
+.compare-result {
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 1px 6px;
+  border-radius: 12px;
+  padding: 20px 24px;
+  display: none;
+}
+.compare-result.visible { display: block; }
+.compare-result-header {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px; flex-wrap: wrap; gap: 8px;
+}
+.compare-pair-title {
+  font-size: 20px; font-weight: 700;
   font-family: var(--mono);
-  font-size: 12px;
-  color: var(--accent);
 }
-.scale-demo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 12px 0;
-  flex-wrap: wrap;
+.compare-stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.cstat {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 16px; min-width: 110px;
 }
-.scale-swatch {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--text2);
+.cstat .cv { font-size: 20px; font-weight: 700; font-family: var(--mono); }
+.cstat .cl2 { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-top: 3px; }
+#compare-chart-wrap { position: relative; height: 320px; }
+.compare-error {
+  background: #fff5f5; border: 1px solid #fca5a5;
+  color: #991b1b; border-radius: 8px;
+  padding: 12px 16px; font-size: 13px; margin-top: 12px;
+  display: none;
 }
-.sw {
-  width: 28px; height: 18px;
-  border-radius: 4px;
-  border: 1px solid rgba(0,0,0,.08);
-}
+.compare-error.visible { display: block; }
 
-/* ── Legend bar ── */
-.corr-legend {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 8px;
-  font-size: 10px;
-  color: var(--text3);
-}
-.legend-bar {
-  height: 10px;
-  width: 200px;
-  border-radius: 3px;
-  background: linear-gradient(to right, #053061, #4393c3, #f7f7f7, #d6604d, #67001f);
-  border: 1px solid var(--border);
-}
-
-/* ── Error banner ── */
-.error-banner {
-  background: #fef2f2;
-  border: 1px solid #fca5a5;
-  color: #991b1b;
-  padding: 10px 20px;
-  font-size: 12.5px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-/* ── Top & Bottom Pairs ── */
+/* ── Top/Bottom pairs ── */
 .extremes-wrap {
-  max-width: 900px;
-  margin: 32px auto;
+  max-width: 900px; margin: 28px auto;
   padding: 0 20px 48px;
 }
-.extremes-header {
-  display: flex;
-  align-items: center;
+.extremes-top-bar {
+  display: flex; align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-  gap: 8px;
+  margin-bottom: 18px; flex-wrap: wrap; gap: 8px;
 }
 .extremes-window-note {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text2);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 5px 12px;
+  font-size: 12px; font-weight: 600; color: var(--text2);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 12px;
 }
-.extremes-hint {
-  font-size: 11.5px;
-  color: var(--text3);
-}
+.extremes-hint { font-size: 11.5px; color: var(--text3); }
 .extremes-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
 }
-@media (max-width: 680px) {
-  .extremes-grid { grid-template-columns: 1fr; }
-}
+@media (max-width: 680px) { .extremes-grid { grid-template-columns: 1fr; } }
 .ext-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden;
 }
 .ext-card-title {
-  padding: 14px 18px 12px;
-  font-size: 13px;
-  font-weight: 700;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+  padding: 14px 18px 12px; font-size: 13px; font-weight: 700;
+  display: flex; flex-direction: column; gap: 3px;
   border-bottom: 1px solid var(--border);
 }
-.ext-card-sub {
-  font-size: 11px;
-  font-weight: 400;
-  opacity: .75;
-}
+.ext-card-sub { font-size: 11px; font-weight: 400; opacity: .75; }
 .ext-high { background: #fff5f5; color: #7f1d1d; }
 .ext-low  { background: #eff6ff; color: #1e3a5f; }
-.ext-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: var(--mono);
-}
+.ext-table { width: 100%; border-collapse: collapse; font-family: var(--mono); }
 .ext-table thead th {
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .5px;
-  color: var(--text3);
-  padding: 8px 18px;
-  text-align: left;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface2);
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .5px; color: var(--text3);
+  padding: 8px 18px; text-align: left;
+  border-bottom: 1px solid var(--border); background: var(--surface2);
 }
 .ext-table thead th:nth-child(2) { text-align: right; }
 .ext-table tbody tr {
   border-bottom: 1px solid var(--border);
-  cursor: pointer;
-  transition: background .12s;
+  cursor: pointer; transition: background .12s;
 }
 .ext-table tbody tr:last-child { border-bottom: none; }
 .ext-table tbody tr:hover { background: #f0f7ff; }
-.ext-table td {
-  padding: 12px 18px;
-  font-size: 12.5px;
-  vertical-align: middle;
-}
-.ext-pair {
-  font-weight: 700;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 13px;
-}
-.ext-val {
-  text-align: right;
-  font-weight: 700;
-  font-size: 15px;
-  font-family: var(--mono);
-}
+.ext-table td { padding: 11px 18px; font-size: 12.5px; vertical-align: middle; }
+.ext-pair { font-weight: 700; color: var(--text); font-size: 13px; }
+.ext-val  { text-align: right; font-weight: 700; font-size: 15px; }
 .ext-swatch {
-  width: 16px; height: 16px;
-  border-radius: 4px;
-  display: inline-block;
-  vertical-align: middle;
-  border: 1px solid rgba(0,0,0,.1);
-  margin-left: 8px;
+  width: 14px; height: 14px; border-radius: 3px;
+  display: inline-block; vertical-align: middle;
+  border: 1px solid rgba(0,0,0,.1); margin-left: 8px;
 }
-.ext-arrow {
-  text-align: right;
-  color: var(--text3);
-  font-size: 14px;
+.ext-arrow { text-align: right; color: var(--text3); font-size: 14px; }
+.ext-empty { text-align: center; padding: 24px; color: var(--text3); font-family: var(--sans); font-size: 12px; }
+
+/* ── How to Use ── */
+.how-to { max-width: 820px; margin: 28px auto; padding: 0 20px 48px; }
+.how-section {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 22px 26px; margin-bottom: 18px;
 }
-.ext-empty {
-  text-align: center;
-  padding: 24px;
-  color: var(--text3);
-  font-family: var(--sans);
-  font-size: 12px;
+.how-section h2 {
+  font-size: 15px; font-weight: 700; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.how-section p { font-size: 13px; color: var(--text2); line-height: 1.65; margin-bottom: 10px; }
+.how-section p:last-child { margin-bottom: 0; }
+.how-section ul { padding-left: 18px; color: var(--text2); font-size: 13px; line-height: 1.8; }
+.how-section code {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 4px; padding: 1px 6px;
+  font-family: var(--mono); font-size: 12px; color: var(--accent);
+}
+.scale-demo { display: flex; align-items: center; gap: 12px; margin: 12px 0; flex-wrap: wrap; }
+.scale-swatch { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
+.sw { width: 28px; height: 18px; border-radius: 4px; border: 1px solid rgba(0,0,0,.08); }
+
+/* Error banner */
+.error-banner {
+  background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b;
+  padding: 10px 20px; font-size: 12.5px;
+  display: flex; align-items: center; gap: 8px;
 }
 </style>
 </head>
 <body>
 
-<!-- Loading overlay -->
 <div id="loading-overlay" class="{{ 'hidden' if status == 'ready' else '' }}">
   <div class="spinner"></div>
   <div class="loading-text">Building correlation matrix...</div>
-  <div class="loading-sub" id="load-sub">Downloading price data for 70 ETFs</div>
+  <div class="loading-sub" id="load-sub">Downloading 44 ETFs — usually under 20 seconds</div>
 </div>
 
 {% if error %}
-<div class="error-banner">
-  <span>&#9888;</span> {{ error }}
-</div>
+<div class="error-banner"><span>&#9888;</span> {{ error }}</div>
 {% endif %}
 
-<!-- Header -->
 <header>
   <div class="h-brand">
     <div class="logo">&#x1F4CA;</div>
     <div>
       <h1>Asset Correlation Matrix</h1>
-      <div class="sub">70 ETFs &mdash; core.market-dashboard.com</div>
+      <div class="sub">44 ETFs &mdash; corr.market-dashboards.com</div>
     </div>
   </div>
   <div class="h-meta">
@@ -645,10 +485,12 @@ thead .hl {
   </div>
 </header>
 
-<!-- Tabs -->
 <div class="tabs">
   <div class="tab active" data-panel="heatmap">
     <span class="ico">&#x1F7E6;</span> Correlation Matrix
+  </div>
+  <div class="tab" data-panel="compare">
+    <span class="ico">&#x1F50D;</span> Compare Two ETFs
   </div>
   <div class="tab" data-panel="extremes">
     <span class="ico">&#x21C5;</span> Top &amp; Bottom Pairs
@@ -658,154 +500,161 @@ thead .hl {
   </div>
 </div>
 
+
 <!-- ═══ HEATMAP PANEL ═══ -->
 <div class="panel active" id="panel-heatmap">
 
-  <!-- Controls -->
   <div class="controls">
-    <div class="ctrl-group">
-      <span class="ctrl-label">Window</span>
-      <div class="window-toggle">
-        <button class="window-btn active" id="btn-21" onclick="setWindow(21)">1 Month (21 days)</button>
-        <button class="window-btn" id="btn-5" onclick="setWindow(5)">1 Week (5 days)</button>
-      </div>
+    <span class="ctrl-label">Window</span>
+    <div class="window-toggle">
+      <button class="window-btn active" id="btn-21" onclick="setWindow(21)">1 Month (21 days)</button>
+      <button class="window-btn"        id="btn-5"  onclick="setWindow(5)">1 Week (5 days)</button>
     </div>
-    <div class="info-badge" id="data-info">
+    <div class="info-badge">
       <b id="ticker-count">—</b> tickers &nbsp;|&nbsp; <b id="date-info">—</b>
     </div>
-    <div class="ctrl-group" style="margin-left:auto;">
-      <div class="corr-legend">
-        <span>-1.0</span>
-        <div class="legend-bar"></div>
-        <span>+1.0</span>
-        &nbsp; Click any cell to see rolling 21-day correlation chart
-      </div>
+    <div class="corr-legend">
+      <span>-1.0</span>
+      <div class="legend-bar"></div>
+      <span>+1.0</span>
+      &nbsp;&nbsp;Click any cell for rolling chart
     </div>
   </div>
 
-  <!-- Heatmap -->
-  <div class="heatmap-container">
-    <div class="heatmap-scroll">
-      <div id="heatmap-wrap">
-        <table id="heatmap-table"></table>
+  <!-- This single div scrolls in both directions; sticky works inside it -->
+  <div class="heatmap-outer" id="heatmap-outer">
+    <table id="heatmap-table"></table>
+  </div>
+
+</div>
+
+
+<!-- ═══ COMPARE TWO ETFS PANEL ═══ -->
+<div class="panel" id="panel-compare">
+  <div class="compare-wrap">
+
+    <div class="compare-search">
+      <h2>&#x1F50D; Compare Any Two ETFs</h2>
+      <div class="compare-row">
+        <input class="compare-input" id="cmp-t1" maxlength="6" placeholder="e.g. SPY" autocomplete="off" />
+        <span class="compare-vs">vs</span>
+        <input class="compare-input" id="cmp-t2" maxlength="6" placeholder="e.g. TLT" autocomplete="off" />
+        <button class="compare-btn" onclick="runCompare()">Compare</button>
+      </div>
+      <div class="compare-hint">Enter any two tickers available in the dataset (44 ETFs). Press Enter or click Compare.</div>
+      <div class="compare-error" id="cmp-error"></div>
+    </div>
+
+    <div class="compare-result" id="cmp-result">
+      <div class="compare-result-header">
+        <div class="compare-pair-title" id="cmp-title">SPY vs TLT</div>
+      </div>
+      <div class="compare-stats">
+        <div class="cstat">
+          <div class="cv" id="cmp-current">—</div>
+          <div class="cl2">Current (21d)</div>
+        </div>
+        <div class="cstat">
+          <div class="cv" id="cmp-avg">—</div>
+          <div class="cl2">Period Avg</div>
+        </div>
+        <div class="cstat">
+          <div class="cv" id="cmp-min">—</div>
+          <div class="cl2">Period Min</div>
+        </div>
+        <div class="cstat">
+          <div class="cv" id="cmp-max">—</div>
+          <div class="cl2">Period Max</div>
+        </div>
+      </div>
+      <div id="compare-chart-wrap">
+        <canvas id="compare-chart"></canvas>
       </div>
     </div>
+
   </div>
 </div>
 
-<!-- ═══ TOP & BOTTOM PAIRS PANEL ═══ -->
+
+<!-- ═══ TOP/BOTTOM PAIRS PANEL ═══ -->
 <div class="panel" id="panel-extremes">
   <div class="extremes-wrap">
-
-    <div class="extremes-header">
+    <div class="extremes-top-bar">
       <div class="extremes-window-note" id="ext-window-note">Based on 1-Month (21-day) window</div>
       <div class="extremes-hint">Click any row to see the rolling correlation chart</div>
     </div>
-
     <div class="extremes-grid">
-
-      <!-- Highest -->
       <div class="ext-card">
         <div class="ext-card-title ext-high">
-          <span>&#x2191;</span> 5 Most Correlated Pairs
-          <span class="ext-card-sub">Move together — less diversification benefit</span>
+          <span>&#x2191; 5 Most Correlated Pairs</span>
+          <span class="ext-card-sub">Move together &mdash; less diversification benefit</span>
         </div>
-        <table class="ext-table" id="ext-high-table">
-          <thead>
-            <tr>
-              <th>Pair</th>
-              <th>Correlation</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="ext-high-body">
-            <tr><td colspan="3" class="ext-empty">Loading...</td></tr>
-          </tbody>
+        <table class="ext-table">
+          <thead><tr><th>Pair</th><th>Correlation</th><th></th></tr></thead>
+          <tbody id="ext-high-body"><tr><td colspan="3" class="ext-empty">Loading...</td></tr></tbody>
         </table>
       </div>
-
-      <!-- Lowest -->
       <div class="ext-card">
         <div class="ext-card-title ext-low">
-          <span>&#x2193;</span> 5 Least Correlated Pairs
-          <span class="ext-card-sub">Move independently — stronger diversification</span>
+          <span>&#x2193; 5 Least Correlated Pairs</span>
+          <span class="ext-card-sub">Move independently &mdash; stronger diversification</span>
         </div>
-        <table class="ext-table" id="ext-low-table">
-          <thead>
-            <tr>
-              <th>Pair</th>
-              <th>Correlation</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="ext-low-body">
-            <tr><td colspan="3" class="ext-empty">Loading...</td></tr>
-          </tbody>
+        <table class="ext-table">
+          <thead><tr><th>Pair</th><th>Correlation</th><th></th></tr></thead>
+          <tbody id="ext-low-body"><tr><td colspan="3" class="ext-empty">Loading...</td></tr></tbody>
         </table>
       </div>
-
     </div>
   </div>
 </div>
+
 
 <!-- ═══ HOW TO USE PANEL ═══ -->
 <div class="panel" id="panel-howto">
   <div class="how-to">
     <div class="how-section">
-      <h2><span class="ico">&#x1F4CA;</span> What is this dashboard?</h2>
-      <p>The Asset Correlation Matrix shows how closely pairs of ETFs move together over a selected time window. It covers <strong>70 ETFs</strong> spanning US equities, sectors, international markets, bonds, commodities, currencies, and thematic strategies.</p>
-      <p>Correlation ranges from <strong>-1.0</strong> (perfect inverse relationship) to <strong>+1.0</strong> (perfectly in lockstep). A value near <strong>0</strong> means the two assets move independently of each other.</p>
+      <h2>&#x1F4CA; What is this dashboard?</h2>
+      <p>The Asset Correlation Matrix shows how closely 44 ETFs move together over a selected time window, covering US equities, sectors, international markets, bonds, commodities, and currencies.</p>
+      <p>Correlation ranges from <strong>-1.0</strong> (perfect inverse) to <strong>+1.0</strong> (perfectly in lockstep). Near <strong>0</strong> means the two assets move independently.</p>
     </div>
-
     <div class="how-section">
-      <h2><span class="ico">&#x1F3A8;</span> Reading the color scale</h2>
+      <h2>&#x1F3A8; Reading the colour scale</h2>
       <div class="scale-demo">
-        <div class="scale-swatch"><div class="sw" style="background:#053061"></div> -1.0 (strong inverse)</div>
+        <div class="scale-swatch"><div class="sw" style="background:#053061"></div> -1.0 strong inverse</div>
         <div class="scale-swatch"><div class="sw" style="background:#4393c3"></div> -0.5</div>
-        <div class="scale-swatch"><div class="sw" style="background:#f7f7f7;border:1px solid #ccc"></div> 0.0 (no correlation)</div>
+        <div class="scale-swatch"><div class="sw" style="background:#f7f7f7;border:1px solid #ccc"></div> 0.0 no relationship</div>
         <div class="scale-swatch"><div class="sw" style="background:#d6604d"></div> +0.5</div>
-        <div class="scale-swatch"><div class="sw" style="background:#67001f"></div> +1.0 (strong positive)</div>
+        <div class="scale-swatch"><div class="sw" style="background:#67001f"></div> +1.0 strong positive</div>
       </div>
-      <p>Dark red cells indicate assets that move closely together. Dark blue cells indicate assets that move in opposite directions. White/light cells indicate little relationship.</p>
+      <p>Dark red = assets moving closely together. Dark blue = moving in opposite directions. White = little relationship.</p>
     </div>
-
     <div class="how-section">
-      <h2><span class="ico">&#x1F4C5;</span> Time windows</h2>
-      <p>Use the toggle to switch between two lookback windows:</p>
+      <h2>&#x1F4C5; Time windows</h2>
       <ul>
-        <li><strong>1 Month (21 trading days)</strong> &mdash; medium-term correlations, useful for portfolio construction and risk management. Most stable and reliable.</li>
-        <li><strong>1 Week (5 trading days)</strong> &mdash; very short-term correlations, highly sensitive to recent market events or news. Can change rapidly.</li>
-      </ul>
-      <p>Start with the 1-Month view for strategic decisions. Use 1-Week to check if short-term behaviour has diverged from the norm.</p>
-    </div>
-
-    <div class="how-section">
-      <h2><span class="ico">&#x1F4C8;</span> Rolling correlation chart</h2>
-      <p>Click any cell in the heatmap to open a lightbox showing the <strong>rolling 21-day correlation</strong> between those two ETFs over the past 91 trading days (~4.5 months). This lets you see:</p>
-      <ul>
-        <li>Whether the current correlation is typical or an outlier</li>
-        <li>How stable the relationship is over time</li>
-        <li>When correlations spiked (e.g., during a market selloff, correlations often rise toward 1.0)</li>
+        <li><strong>1 Month (21 trading days)</strong> &mdash; medium-term; most reliable for portfolio decisions.</li>
+        <li><strong>1 Week (5 trading days)</strong> &mdash; very short-term; sensitive to recent events, changes rapidly.</li>
       </ul>
     </div>
-
     <div class="how-section">
-      <h2><span class="ico">&#x1F4B0;</span> Practical uses</h2>
+      <h2>&#x1F50D; Compare Two ETFs tab</h2>
+      <p>Type any two ticker symbols to instantly see their rolling 21-day correlation over the full 91-day data window, even if they are not in the main 44-ticker list (as long as the data is available).</p>
+    </div>
+    <div class="how-section">
+      <h2>&#x1F4B0; Practical uses</h2>
       <ul>
-        <li><strong>Diversification:</strong> Look for pairs with low or negative correlation to reduce portfolio volatility.</li>
-        <li><strong>Concentration risk:</strong> High correlation (+0.8 or above) between two holdings means they move together &mdash; you may not be as diversified as you think.</li>
-        <li><strong>Hedging:</strong> Assets with strong negative correlation can act as partial hedges. For example, GLD (gold) and TLT (long bonds) often negatively correlate with equity ETFs in risk-off environments.</li>
-        <li><strong>Regime detection:</strong> When correlations across many pairs suddenly rise together, the market is often in a stress/risk-off regime.</li>
+        <li><strong>Diversification:</strong> Low or negative correlation between holdings reduces portfolio volatility.</li>
+        <li><strong>Concentration risk:</strong> High correlation (+0.8+) means you may be less diversified than you think.</li>
+        <li><strong>Hedging:</strong> GLD and TLT often negatively correlate with equities in risk-off environments.</li>
+        <li><strong>Regime detection:</strong> When correlations across many pairs suddenly rise, the market is typically in a stress/risk-off regime.</li>
       </ul>
     </div>
-
     <div class="how-section">
-      <h2><span class="ico">&#x23F0;</span> Data &amp; refresh schedule</h2>
-      <p>Price data comes from <strong>Yahoo Finance</strong> via the <code>yfinance</code> library. The dashboard uses <strong>91 trading days</strong> (~4.5 months) of daily closing prices, automatically excluding weekends and holidays via forward-fill.</p>
-      <p>Data is cached in <strong>Upstash Redis</strong> and refreshed nightly via a cron job, so repeated visits during the day are instant. To force a manual refresh, click the <em>Refresh Data</em> button in the header (useful after market close each trading day).</p>
+      <h2>&#x23F0; Data and refresh</h2>
+      <p>Prices come from <strong>Yahoo Finance</strong> via <code>yfinance</code>. The dashboard uses <strong>91 trading days</strong> of daily closes, with weekends and holidays forward-filled. Data is cached in <strong>Upstash Redis</strong> and refreshed nightly via cron. Click <em>Refresh Data</em> in the header to force an immediate update after market close.</p>
     </div>
   </div>
 </div>
+
 
 <!-- ═══ LIGHTBOX ═══ -->
 <div id="lightbox" class="hidden">
@@ -813,43 +662,30 @@ thead .hl {
     <div class="lb-header">
       <div>
         <div class="lb-title" id="lb-title">ETF vs ETF</div>
-        <div class="lb-subtitle">Rolling 21-day Pearson correlation &mdash; last 91 trading days</div>
+        <div class="lb-subtitle">Rolling 21-day correlation &mdash; last 91 trading days</div>
       </div>
       <button class="lb-close" onclick="closeLightbox()">&#x2715;</button>
     </div>
     <div class="lb-body">
       <div class="lb-stats">
-        <div class="lb-stat">
-          <div class="sv" id="lb-current">—</div>
-          <div class="sl">Current Correlation</div>
-        </div>
-        <div class="lb-stat">
-          <div class="sv" id="lb-avg">—</div>
-          <div class="sl">Period Average</div>
-        </div>
-        <div class="lb-stat">
-          <div class="sv" id="lb-min">—</div>
-          <div class="sl">Period Min</div>
-        </div>
-        <div class="lb-stat">
-          <div class="sv" id="lb-max">—</div>
-          <div class="sl">Period Max</div>
-        </div>
+        <div class="lb-stat"><div class="sv" id="lb-current">—</div><div class="sl">Current</div></div>
+        <div class="lb-stat"><div class="sv" id="lb-avg">—</div><div class="sl">Avg</div></div>
+        <div class="lb-stat"><div class="sv" id="lb-min">—</div><div class="sl">Min</div></div>
+        <div class="lb-stat"><div class="sv" id="lb-max">—</div><div class="sl">Max</div></div>
       </div>
-      <div id="chart-canvas-wrap">
-        <canvas id="rolling-chart"></canvas>
-      </div>
+      <div id="chart-canvas-wrap"><canvas id="rolling-chart"></canvas></div>
     </div>
   </div>
 </div>
 
-<!-- Chart.js CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 // ── State ──────────────────────────────────────────────────────────────────────
-let currentWindow = 21;
-let chartInstance = null;
+let currentWindow  = 21;
+let lightboxChart  = null;
+let compareChart   = null;
+let lastMatrixData = null;
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 document.querySelectorAll('.tab').forEach(tab => {
@@ -857,16 +693,12 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     tab.classList.add('active');
-    const panelId = 'panel-' + tab.dataset.panel;
-    const panel = document.getElementById(panelId);
-    if (panel) panel.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
   });
 });
 
-// ── Colour interpolation ──────────────────────────────────────────────────────
-// Scale: -1 = deep red (#67001f), 0 = white (#f7f7f7), +1 = deep blue (#053061)
-// Using a diverging RdBu palette (11-stop)
-const RD_BU = [
+// ── Colour scale (low=-1 blue, high=+1 red) ───────────────────────────────────
+const SCALE = [
   [-1.00, [  5, 48, 97]],
   [-0.80, [  5, 48, 97]],
   [-0.60, [ 33,102,172]],
@@ -883,9 +715,9 @@ const RD_BU = [
 function corrColor(v) {
   if (v === null || v === undefined) return '#e5e7eb';
   v = Math.max(-1, Math.min(1, v));
-  for (let i = 0; i < RD_BU.length - 1; i++) {
-    const [lo, cLo] = RD_BU[i];
-    const [hi, cHi] = RD_BU[i + 1];
+  for (let i = 0; i < SCALE.length - 1; i++) {
+    const [lo, cLo] = SCALE[i];
+    const [hi, cHi] = SCALE[i + 1];
     if (v >= lo && v <= hi) {
       const t = (v - lo) / (hi - lo);
       const r = Math.round(cLo[0] + t * (cHi[0] - cLo[0]));
@@ -896,42 +728,261 @@ function corrColor(v) {
   }
   return '#f7f7f7';
 }
-
-function textColorForBg(v) {
-  if (v === null) return '#555';
-  return Math.abs(v) > 0.55 ? '#ffffff' : '#222222';
+function textColor(v) {
+  return (v !== null && Math.abs(v) > 0.55) ? '#ffffff' : '#222222';
 }
 
-// ── Build extremes tab ────────────────────────────────────────────────────────
-let lastMatrixData = null;
-
-function buildExtremes(data) {
+// ── Build heatmap ─────────────────────────────────────────────────────────────
+function buildHeatmap(data) {
   lastMatrixData = data;
-  const { tickers, matrix, window: w } = data;
+  const { tickers, matrix, window: w, last_updated } = data;
 
-  // Update window note
+  document.getElementById('ticker-count').textContent = tickers.length;
+  document.getElementById('date-info').textContent    = last_updated || '';
+  document.getElementById('h-updated').textContent    = last_updated || '';
+
+  const table = document.getElementById('heatmap-table');
+  table.innerHTML = '';
+
+  // ── Header row ──
+  const thead = document.createElement('thead');
+  const hrow  = document.createElement('tr');
+
+  // Corner
+  const corner    = document.createElement('th');
+  corner.className = 'hl';
+  hrow.appendChild(corner);
+
+  tickers.forEach(t => {
+    const th    = document.createElement('th');
+    th.className = 'cl';
+    th.innerHTML = `<span>${t}</span>`;
+    hrow.appendChild(th);
+  });
+  thead.appendChild(hrow);
+  table.appendChild(thead);
+
+  // ── Body rows ──
+  const tbody = document.createElement('tbody');
+  tickers.forEach((rowT, ri) => {
+    const tr  = document.createElement('tr');
+    const lbl = document.createElement('td');
+    lbl.className   = 'hl';
+    lbl.textContent = rowT;
+    tr.appendChild(lbl);
+
+    matrix[ri].forEach((val, ci) => {
+      const colT = tickers[ci];
+      const td   = document.createElement('td');
+      td.className       = 'hm-cell' + (ri === ci ? ' self' : '');
+      td.style.background = corrColor(val);
+      td.style.color      = textColor(val);
+      if (ri === ci) {
+        td.textContent = '1';
+      } else if (val !== null) {
+        td.textContent = val.toFixed(1);
+        td.title       = `${rowT} vs ${colT}: ${val.toFixed(4)}`;
+        td.addEventListener('click', () => openLightbox(rowT, colT, val));
+      }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+
+  buildExtremes(data);
+}
+
+// ── Fetch matrix ──────────────────────────────────────────────────────────────
+function loadMatrix(w) {
+  fetch(`/api/matrix?window=${w}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) { setTimeout(() => loadMatrix(w), 4000); return; }
+      hideLoading();
+      buildHeatmap(data);
+    })
+    .catch(() => setTimeout(() => loadMatrix(w), 5000));
+}
+
+function setWindow(w) {
+  currentWindow = w;
+  document.getElementById('btn-21').classList.toggle('active', w === 21);
+  document.getElementById('btn-5').classList.toggle('active',  w === 5);
+  loadMatrix(w);
+}
+
+// ── Loading ───────────────────────────────────────────────────────────────────
+function hideLoading() {
+  document.getElementById('loading-overlay').classList.add('hidden');
+}
+function pollStatus() {
+  fetch('/status').then(r => r.json()).then(d => {
+    if (d.status === 'ready') { loadMatrix(currentWindow); }
+    else { setTimeout(pollStatus, 4000); }
+  }).catch(() => setTimeout(pollStatus, 5000));
+}
+
+// ── Lightbox ──────────────────────────────────────────────────────────────────
+function openLightbox(t1, t2, currentVal) {
+  document.getElementById('lb-title').textContent   = `${t1} vs ${t2}`;
+  document.getElementById('lb-current').textContent = currentVal !== null ? currentVal.toFixed(4) : '—';
+  document.getElementById('lb-avg').textContent = '—';
+  document.getElementById('lb-min').textContent = '—';
+  document.getElementById('lb-max').textContent = '—';
+  document.getElementById('lightbox').classList.remove('hidden');
+  if (lightboxChart) { lightboxChart.destroy(); lightboxChart = null; }
+
+  fetch(`/api/rolling?t1=${t1}&t2=${t2}`)
+    .then(r => r.json())
+    .then(d => {
+      const pts = (d.data || []).filter(p => p.value !== null);
+      if (!pts.length) return;
+      const vals = pts.map(p => p.value);
+      const avg  = vals.reduce((a,b) => a+b, 0) / vals.length;
+      document.getElementById('lb-avg').textContent = avg.toFixed(4);
+      document.getElementById('lb-min').textContent = Math.min(...vals).toFixed(4);
+      document.getElementById('lb-max').textContent = Math.max(...vals).toFixed(4);
+      lightboxChart = makeLineChart('rolling-chart', pts.map(p => p.date), vals, `${t1} / ${t2}`);
+    });
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.add('hidden');
+  if (lightboxChart) { lightboxChart.destroy(); lightboxChart = null; }
+}
+document.getElementById('lightbox').addEventListener('click', e => {
+  if (e.target === document.getElementById('lightbox')) closeLightbox();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+// ── Compare tab ───────────────────────────────────────────────────────────────
+function runCompare() {
+  const t1  = document.getElementById('cmp-t1').value.trim().toUpperCase();
+  const t2  = document.getElementById('cmp-t2').value.trim().toUpperCase();
+  const err = document.getElementById('cmp-error');
+  const res = document.getElementById('cmp-result');
+
+  err.classList.remove('visible');
+  res.classList.remove('visible');
+
+  if (!t1 || !t2) {
+    err.textContent = 'Please enter two ticker symbols.';
+    err.classList.add('visible');
+    return;
+  }
+  if (t1 === t2) {
+    err.textContent = 'Please enter two different tickers.';
+    err.classList.add('visible');
+    return;
+  }
+
+  document.getElementById('cmp-title').textContent = `${t1} vs ${t2}`;
+  ['cmp-current','cmp-avg','cmp-min','cmp-max'].forEach(id => {
+    document.getElementById(id).textContent = '...';
+  });
+  res.classList.add('visible');
+  if (compareChart) { compareChart.destroy(); compareChart = null; }
+
+  fetch(`/api/rolling?t1=${t1}&t2=${t2}`)
+    .then(r => r.json())
+    .then(d => {
+      const pts = (d.data || []).filter(p => p.value !== null);
+      if (!pts.length) {
+        res.classList.remove('visible');
+        err.textContent = `No data found for ${t1} or ${t2}. Check the ticker symbols.`;
+        err.classList.add('visible');
+        return;
+      }
+      const vals = pts.map(p => p.value);
+      const avg  = vals.reduce((a,b) => a+b, 0) / vals.length;
+      const last = vals[vals.length - 1];
+
+      const colorVal = v => v > 0.5 ? '#7f1d1d' : v < -0.3 ? '#1e3a5f' : '#374151';
+      document.getElementById('cmp-current').textContent = last.toFixed(4);
+      document.getElementById('cmp-current').style.color = colorVal(last);
+      document.getElementById('cmp-avg').textContent     = avg.toFixed(4);
+      document.getElementById('cmp-avg').style.color     = colorVal(avg);
+      document.getElementById('cmp-min').textContent     = Math.min(...vals).toFixed(4);
+      document.getElementById('cmp-max').textContent     = Math.max(...vals).toFixed(4);
+
+      compareChart = makeLineChart('compare-chart', pts.map(p => p.date), vals, `${t1} / ${t2} rolling 21-day correlation`);
+    })
+    .catch(() => {
+      err.textContent = 'Request failed. Please try again.';
+      err.classList.add('visible');
+    });
+}
+
+// Enter key on compare inputs
+['cmp-t1','cmp-t2'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', e => {
+    if (e.key === 'Enter') runCompare();
+  });
+});
+
+// ── Shared chart factory ──────────────────────────────────────────────────────
+function makeLineChart(canvasId, labels, values, label) {
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  return new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label,
+        data: values,
+        borderColor: '#1a56db',
+        backgroundColor: 'rgba(26,86,219,.06)',
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        fill: true,
+        tension: 0.3,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        x: {
+          ticks: { maxTicksLimit: 8, font: { family: "'DM Mono', monospace", size: 10 }, color: '#8898aa' },
+          grid:  { color: '#e2e8f2' },
+        },
+        y: {
+          min: -1, max: 1,
+          ticks: { stepSize: 0.25, font: { family: "'DM Mono', monospace", size: 10 }, color: '#8898aa' },
+          grid:  { color: '#e2e8f2' },
+        },
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0f1a2e',
+          titleFont: { family: "'Sora', sans-serif", size: 11 },
+          bodyFont:  { family: "'DM Mono', monospace", size: 12 },
+          callbacks: { label: c => ` Correlation: ${c.parsed.y.toFixed(4)}` },
+        },
+      },
+    },
+  });
+}
+
+// ── Top/Bottom pairs ──────────────────────────────────────────────────────────
+function buildExtremes(data) {
+  const { tickers, matrix, window: w } = data;
   const note = document.getElementById('ext-window-note');
   if (note) note.textContent = `Based on ${w === 5 ? '1-Week (5-day)' : '1-Month (21-day)'} window`;
 
-  // Collect all unique pairs (upper triangle only)
   const pairs = [];
   for (let i = 0; i < tickers.length; i++) {
     for (let j = i + 1; j < tickers.length; j++) {
-      const val = matrix[i][j];
-      if (val !== null && !isNaN(val)) {
-        pairs.push({ t1: tickers[i], t2: tickers[j], val });
-      }
+      const v = matrix[i][j];
+      if (v !== null && !isNaN(v)) pairs.push({ t1: tickers[i], t2: tickers[j], val: v });
     }
   }
-
-  // Sort by correlation
   pairs.sort((a, b) => b.val - a.val);
-
-  const top5    = pairs.slice(0, 5);
-  const bottom5 = pairs.slice(-5).reverse();
-
-  renderExtTable('ext-high-body', top5);
-  renderExtTable('ext-low-body', bottom5);
+  renderExtTable('ext-high-body', pairs.slice(0, 5));
+  renderExtTable('ext-low-body',  pairs.slice(-5).reverse());
 }
 
 function renderExtTable(bodyId, pairs) {
@@ -942,262 +993,37 @@ function renderExtTable(bodyId, pairs) {
     const tr = document.createElement('tr');
     tr.addEventListener('click', () => openLightbox(t1, t2, val));
 
-    // Pair cell
-    const tdPair = document.createElement('td');
-    tdPair.className = 'ext-pair';
-    tdPair.textContent = `${t1} / ${t2}`;
-    tr.appendChild(tdPair);
+    const tdP = document.createElement('td');
+    tdP.className   = 'ext-pair';
+    tdP.textContent = `${t1} / ${t2}`;
 
-    // Value + swatch cell
-    const tdVal = document.createElement('td');
-    tdVal.className = 'ext-val';
-    tdVal.style.color = val > 0.5 ? '#7f1d1d' : val < -0.3 ? '#1e3a5f' : '#374151';
-    const swatch = document.createElement('span');
-    swatch.className = 'ext-swatch';
-    swatch.style.background = corrColor(val);
-    tdVal.textContent = val.toFixed(2);
-    tdVal.appendChild(swatch);
-    tr.appendChild(tdVal);
+    const tdV  = document.createElement('td');
+    tdV.className   = 'ext-val';
+    tdV.style.color = val > 0.5 ? '#7f1d1d' : val < -0.3 ? '#1e3a5f' : '#374151';
+    const sw        = document.createElement('span');
+    sw.className    = 'ext-swatch';
+    sw.style.background = corrColor(val);
+    tdV.textContent = val.toFixed(2);
+    tdV.appendChild(sw);
 
-    // Arrow cell
-    const tdArrow = document.createElement('td');
-    tdArrow.className = 'ext-arrow';
-    tdArrow.textContent = '›';
-    tr.appendChild(tdArrow);
+    const tdA = document.createElement('td');
+    tdA.className   = 'ext-arrow';
+    tdA.textContent = '›';
 
+    tr.appendChild(tdP);
+    tr.appendChild(tdV);
+    tr.appendChild(tdA);
     tbody.appendChild(tr);
   });
 }
-
-function buildHeatmap(data) {
-  const { tickers, matrix, window: w, last_updated } = data;
-  document.getElementById('ticker-count').textContent = tickers.length;
-  document.getElementById('date-info').textContent = last_updated || '';
-  document.getElementById('h-updated').textContent = last_updated || '';
-
-  const table = document.getElementById('heatmap-table');
-  table.innerHTML = '';
-
-  // Header row (rotated column labels)
-  const thead = document.createElement('thead');
-  const hrow  = document.createElement('tr');
-
-  // Corner cell
-  const corner = document.createElement('th');
-  corner.className = 'hl';
-  hrow.appendChild(corner);
-
-  tickers.forEach(t => {
-    const th = document.createElement('th');
-    th.className = 'cl';
-    th.innerHTML = `<span>${t}</span>`;
-    hrow.appendChild(th);
-  });
-  thead.appendChild(hrow);
-  table.appendChild(thead);
-
-  // Body rows
-  const tbody = document.createElement('tbody');
-  tickers.forEach((rowTicker, ri) => {
-    const tr = document.createElement('tr');
-
-    // Row label
-    const lbl = document.createElement('td');
-    lbl.className = 'hl';
-    lbl.textContent = rowTicker;
-    tr.appendChild(lbl);
-
-    matrix[ri].forEach((val, ci) => {
-      const colTicker = tickers[ci];
-      const td = document.createElement('td');
-      td.className = 'hm-cell' + (ri === ci ? ' self' : '');
-      td.style.background = corrColor(val);
-      td.style.color = textColorForBg(val);
-
-      if (val !== null && ri !== ci) {
-        td.textContent = val.toFixed(1);
-        td.title = `${rowTicker} vs ${colTicker}: ${val.toFixed(4)}`;
-        td.addEventListener('click', () => openLightbox(rowTicker, colTicker, val));
-      } else if (ri === ci) {
-        td.textContent = '1';
-      }
-
-      tr.appendChild(td);
-    });
-    tbody.appendChild(tr);
-  });
-  table.appendChild(tbody);
-  buildExtremes(data);
-}
-
-// ── Fetch & render matrix ─────────────────────────────────────────────────────
-function loadMatrix(w) {
-  fetch(`/api/matrix?window=${w}`)
-    .then(r => r.json())
-    .then(data => {
-      if (data.error) {
-        // Still loading, poll again
-        setTimeout(() => loadMatrix(w), 4000);
-        return;
-      }
-      hideLoadingOverlay();
-      buildHeatmap(data);
-    })
-    .catch(() => setTimeout(() => loadMatrix(w), 5000));
-}
-
-function setWindow(w) {
-  currentWindow = w;
-  document.getElementById('btn-21').classList.toggle('active', w === 21);
-  document.getElementById('btn-5').classList.toggle('active', w === 5);
-  loadMatrix(w);
-}
-
-// ── Loading overlay ───────────────────────────────────────────────────────────
-function hideLoadingOverlay() {
-  document.getElementById('loading-overlay').classList.add('hidden');
-}
-
-function pollStatus() {
-  fetch('/status')
-    .then(r => r.json())
-    .then(d => {
-      document.getElementById('load-sub').textContent = d.status === 'ready'
-        ? 'Almost done...'
-        : 'Downloading price data for 70 ETFs';
-      if (d.status === 'ready') {
-        loadMatrix(currentWindow);
-      } else {
-        setTimeout(pollStatus, 4000);
-      }
-    })
-    .catch(() => setTimeout(pollStatus, 5000));
-}
-
-// ── Lightbox ──────────────────────────────────────────────────────────────────
-function openLightbox(t1, t2, currentVal) {
-  document.getElementById('lb-title').textContent = `${t1} vs ${t2}`;
-  document.getElementById('lb-current').textContent = currentVal !== null ? currentVal.toFixed(4) : '—';
-  document.getElementById('lb-avg').textContent = '—';
-  document.getElementById('lb-min').textContent = '—';
-  document.getElementById('lb-max').textContent = '—';
-  document.getElementById('lightbox').classList.remove('hidden');
-
-  // Destroy previous chart
-  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
-
-  fetch(`/api/rolling?t1=${t1}&t2=${t2}`)
-    .then(r => r.json())
-    .then(d => {
-      const pts = (d.data || []).filter(p => p.value !== null);
-      if (!pts.length) return;
-
-      const labels = pts.map(p => p.date);
-      const values = pts.map(p => p.value);
-
-      const avg = values.reduce((a,b) => a+b, 0) / values.length;
-      const mn  = Math.min(...values);
-      const mx  = Math.max(...values);
-
-      document.getElementById('lb-avg').textContent = avg.toFixed(4);
-      document.getElementById('lb-min').textContent = mn.toFixed(4);
-      document.getElementById('lb-max').textContent = mx.toFixed(4);
-
-      // Color stat values
-      [['lb-current', currentVal], ['lb-avg', avg], ['lb-min', mn], ['lb-max', mx]].forEach(([id, v]) => {
-        const el = document.getElementById(id);
-        el.style.color = v > 0.5 ? '#1347bf' : v < -0.3 ? '#991b1b' : '#0f1a2e';
-      });
-
-      const ctx = document.getElementById('rolling-chart').getContext('2d');
-      chartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            label: `${t1} / ${t2} rolling 21-day correlation`,
-            data: values,
-            borderColor: '#1a56db',
-            backgroundColor: 'rgba(26,86,219,.07)',
-            borderWidth: 2,
-            pointRadius: 0,
-            pointHoverRadius: 4,
-            fill: true,
-            tension: 0.3,
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: { mode: 'index', intersect: false },
-          scales: {
-            x: {
-              ticks: {
-                maxTicksLimit: 8,
-                font: { family: "'DM Mono', monospace", size: 10 },
-                color: '#8898aa',
-              },
-              grid: { color: '#e2e8f2' },
-            },
-            y: {
-              min: -1, max: 1,
-              ticks: {
-                stepSize: 0.25,
-                font: { family: "'DM Mono', monospace", size: 10 },
-                color: '#8898aa',
-              },
-              grid: { color: '#e2e8f2' },
-            }
-          },
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              backgroundColor: '#0f1a2e',
-              titleFont: { family: "'Sora', sans-serif", size: 11 },
-              bodyFont:  { family: "'DM Mono', monospace", size: 12 },
-              callbacks: {
-                label: ctx => ` Correlation: ${ctx.parsed.y.toFixed(4)}`
-              }
-            },
-            annotation: {
-              annotations: {
-                zero: {
-                  type: 'line',
-                  yMin: 0, yMax: 0,
-                  borderColor: '#94a3b8',
-                  borderWidth: 1,
-                  borderDash: [4, 3],
-                }
-              }
-            }
-          }
-        }
-      });
-    });
-}
-
-function closeLightbox() {
-  document.getElementById('lightbox').classList.add('hidden');
-  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
-}
-
-document.getElementById('lightbox').addEventListener('click', e => {
-  if (e.target === document.getElementById('lightbox')) closeLightbox();
-});
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeLightbox();
-});
 
 // ── Refresh confirm ───────────────────────────────────────────────────────────
 function confirmRefresh() {
-  if (!confirm('Force a full data refresh? This downloads 91 days of closes for all 70 ETFs and takes about 30 seconds.')) return false;
-  return true;
+  return confirm('Force a full data refresh? Takes about 20 seconds.');
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-const initialStatus = '{{ status }}';
-if (initialStatus === 'ready') {
+if ('{{ status }}' === 'ready') {
   loadMatrix(21);
 } else {
   pollStatus();
