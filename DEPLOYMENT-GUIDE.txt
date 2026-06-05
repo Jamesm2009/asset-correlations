@@ -88,7 +88,7 @@ sudo DOKKU_TAG=v0.34.4 bash bootstrap.sh
 (This takes 3-5 minutes. Wait for the prompt to return.)
 
 --- Step 3c: Set up Dokku ---
-dokku domains:set-global core.market-dashboard.com
+dokku domains:set-global corr.market-dashboard.com
 
 --- Step 3d: Create the app ---
 dokku apps:create correlation-dashboard
@@ -105,7 +105,7 @@ dokku config:set correlation-dashboard \
   PORT=5000
 
 --- Step 3g: Configure the domain ---
-dokku domains:set correlation-dashboard core.market-dashboard.com
+dokku domains:set correlation-dashboard corr.market-dashboard.com
 
 
 =================================================================
@@ -153,7 +153,7 @@ PART 5 — CONFIGURE DNS & SSL
 =================================================================
 
 --- Step 5a: Point your domain to the Droplet ---
-In your domain registrar (wherever you bought core.market-dashboard.com):
+In your domain registrar (wherever you bought corr.market-dashboard.com):
   Add an A record:
     Host:  core   (or @  if it's the root domain)
     Value: YOUR-DROPLET-IP
@@ -167,7 +167,7 @@ In the Droplet console:
 dokku letsencrypt:set correlation-dashboard email YOUR@EMAIL.COM
 dokku letsencrypt:enable correlation-dashboard
 
-Your app is now live at https://core.market-dashboard.com !
+Your app is now live at https://corr.market-dashboard.com !
 
 
 =================================================================
@@ -178,7 +178,7 @@ PART 6 — SET UP NIGHTLY CRON REFRESH
 
 2. Click "Create Cronjob":
      Title:    ETF Correlation Refresh
-     URL:      https://core.market-dashboard.com/refresh
+     URL:      https://corr.market-dashboard.com/refresh
      Schedule: Every day at 5:30 PM (17:30) — or pick your preferred time
                (after 4 PM ET / 3 PM CT when US markets close)
      → Save
