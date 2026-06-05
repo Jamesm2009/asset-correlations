@@ -495,6 +495,124 @@ thead .hl {
   align-items: center;
   gap: 8px;
 }
+/* ── Top & Bottom Pairs ── */
+.extremes-wrap {
+  max-width: 900px;
+  margin: 32px auto;
+  padding: 0 20px 48px;
+}
+.extremes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.extremes-window-note {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 12px;
+}
+.extremes-hint {
+  font-size: 11.5px;
+  color: var(--text3);
+}
+.extremes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 680px) {
+  .extremes-grid { grid-template-columns: 1fr; }
+}
+.ext-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.ext-card-title {
+  padding: 14px 18px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-bottom: 1px solid var(--border);
+}
+.ext-card-sub {
+  font-size: 11px;
+  font-weight: 400;
+  opacity: .75;
+}
+.ext-high { background: #fff5f5; color: #7f1d1d; }
+.ext-low  { background: #eff6ff; color: #1e3a5f; }
+.ext-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+}
+.ext-table thead th {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--text3);
+  padding: 8px 18px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+.ext-table thead th:nth-child(2) { text-align: right; }
+.ext-table tbody tr {
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background .12s;
+}
+.ext-table tbody tr:last-child { border-bottom: none; }
+.ext-table tbody tr:hover { background: #f0f7ff; }
+.ext-table td {
+  padding: 12px 18px;
+  font-size: 12.5px;
+  vertical-align: middle;
+}
+.ext-pair {
+  font-weight: 700;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+.ext-val {
+  text-align: right;
+  font-weight: 700;
+  font-size: 15px;
+  font-family: var(--mono);
+}
+.ext-swatch {
+  width: 16px; height: 16px;
+  border-radius: 4px;
+  display: inline-block;
+  vertical-align: middle;
+  border: 1px solid rgba(0,0,0,.1);
+  margin-left: 8px;
+}
+.ext-arrow {
+  text-align: right;
+  color: var(--text3);
+  font-size: 14px;
+}
+.ext-empty {
+  text-align: center;
+  padding: 24px;
+  color: var(--text3);
+  font-family: var(--sans);
+  font-size: 12px;
+}
 </style>
 </head>
 <body>
@@ -532,6 +650,9 @@ thead .hl {
   <div class="tab active" data-panel="heatmap">
     <span class="ico">&#x1F7E6;</span> Correlation Matrix
   </div>
+  <div class="tab" data-panel="extremes">
+    <span class="ico">&#x21C5;</span> Top &amp; Bottom Pairs
+  </div>
   <div class="tab" data-panel="howto">
     <span class="ico">&#x2753;</span> How to Use
   </div>
@@ -568,6 +689,61 @@ thead .hl {
       <div id="heatmap-wrap">
         <table id="heatmap-table"></table>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TOP & BOTTOM PAIRS PANEL ═══ -->
+<div class="panel" id="panel-extremes">
+  <div class="extremes-wrap">
+
+    <div class="extremes-header">
+      <div class="extremes-window-note" id="ext-window-note">Based on 1-Month (21-day) window</div>
+      <div class="extremes-hint">Click any row to see the rolling correlation chart</div>
+    </div>
+
+    <div class="extremes-grid">
+
+      <!-- Highest -->
+      <div class="ext-card">
+        <div class="ext-card-title ext-high">
+          <span>&#x2191;</span> 5 Most Correlated Pairs
+          <span class="ext-card-sub">Move together — less diversification benefit</span>
+        </div>
+        <table class="ext-table" id="ext-high-table">
+          <thead>
+            <tr>
+              <th>Pair</th>
+              <th>Correlation</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="ext-high-body">
+            <tr><td colspan="3" class="ext-empty">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Lowest -->
+      <div class="ext-card">
+        <div class="ext-card-title ext-low">
+          <span>&#x2193;</span> 5 Least Correlated Pairs
+          <span class="ext-card-sub">Move independently — stronger diversification</span>
+        </div>
+        <table class="ext-table" id="ext-low-table">
+          <thead>
+            <tr>
+              <th>Pair</th>
+              <th>Correlation</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="ext-low-body">
+            <tr><td colspan="3" class="ext-empty">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
     </div>
   </div>
 </div>
@@ -726,7 +902,73 @@ function textColorForBg(v) {
   return Math.abs(v) > 0.55 ? '#ffffff' : '#222222';
 }
 
-// ── Build heatmap ─────────────────────────────────────────────────────────────
+// ── Build extremes tab ────────────────────────────────────────────────────────
+let lastMatrixData = null;
+
+function buildExtremes(data) {
+  lastMatrixData = data;
+  const { tickers, matrix, window: w } = data;
+
+  // Update window note
+  const note = document.getElementById('ext-window-note');
+  if (note) note.textContent = `Based on ${w === 5 ? '1-Week (5-day)' : '1-Month (21-day)'} window`;
+
+  // Collect all unique pairs (upper triangle only)
+  const pairs = [];
+  for (let i = 0; i < tickers.length; i++) {
+    for (let j = i + 1; j < tickers.length; j++) {
+      const val = matrix[i][j];
+      if (val !== null && !isNaN(val)) {
+        pairs.push({ t1: tickers[i], t2: tickers[j], val });
+      }
+    }
+  }
+
+  // Sort by correlation
+  pairs.sort((a, b) => b.val - a.val);
+
+  const top5    = pairs.slice(0, 5);
+  const bottom5 = pairs.slice(-5).reverse();
+
+  renderExtTable('ext-high-body', top5);
+  renderExtTable('ext-low-body', bottom5);
+}
+
+function renderExtTable(bodyId, pairs) {
+  const tbody = document.getElementById(bodyId);
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  pairs.forEach(({ t1, t2, val }) => {
+    const tr = document.createElement('tr');
+    tr.addEventListener('click', () => openLightbox(t1, t2, val));
+
+    // Pair cell
+    const tdPair = document.createElement('td');
+    tdPair.className = 'ext-pair';
+    tdPair.textContent = `${t1} / ${t2}`;
+    tr.appendChild(tdPair);
+
+    // Value + swatch cell
+    const tdVal = document.createElement('td');
+    tdVal.className = 'ext-val';
+    tdVal.style.color = val > 0.5 ? '#7f1d1d' : val < -0.3 ? '#1e3a5f' : '#374151';
+    const swatch = document.createElement('span');
+    swatch.className = 'ext-swatch';
+    swatch.style.background = corrColor(val);
+    tdVal.textContent = val.toFixed(2);
+    tdVal.appendChild(swatch);
+    tr.appendChild(tdVal);
+
+    // Arrow cell
+    const tdArrow = document.createElement('td');
+    tdArrow.className = 'ext-arrow';
+    tdArrow.textContent = '›';
+    tr.appendChild(tdArrow);
+
+    tbody.appendChild(tr);
+  });
+}
+
 function buildHeatmap(data) {
   const { tickers, matrix, window: w, last_updated } = data;
   document.getElementById('ticker-count').textContent = tickers.length;
@@ -785,6 +1027,7 @@ function buildHeatmap(data) {
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
+  buildExtremes(data);
 }
 
 // ── Fetch & render matrix ─────────────────────────────────────────────────────
