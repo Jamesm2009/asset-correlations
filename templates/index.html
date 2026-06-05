@@ -152,16 +152,27 @@ header {
 
 /* ── Heatmap panel layout ── */
 #panel-heatmap {
-  /* fills remaining viewport height so the inner scroll works */
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* Fake top scrollbar strip */
+.heatmap-scroll-top {
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 12px;
+  flex-shrink: 0;
+  margin: 0 16px;
+  border-bottom: 1px solid var(--border);
+}
+.heatmap-scroll-top-inner {
+  height: 1px;  /* just needs width set by JS */
 }
 .heatmap-outer {
   flex: 1;
   overflow: auto;
-  padding: 12px 16px 24px;
-  /* This single scrollable div handles BOTH x and y scroll.
-     Sticky works because the scroll context is this div, not the window. */
+  padding: 0 16px 24px;
 }
 
 /* ── Heatmap table ── */
@@ -191,7 +202,7 @@ header {
   padding: 2px 0 4px;
   font-size: 9.5px; font-weight: 700;
   color: var(--text); text-align: center;
-  vertical-align: bottom; min-width: 32px;
+  vertical-align: bottom; min-width: 36px;
   position: sticky; top: 0; z-index: 15;
   background: var(--bg);
   box-shadow: 0 3px 6px -2px rgba(0,0,0,.1);
@@ -210,7 +221,7 @@ thead th.hl {
 
 /* Heatmap cells */
 .hm-cell {
-  width: 32px; height: 28px;
+  width: 36px; height: 30px;
   text-align: center; vertical-align: middle;
   cursor: pointer;
   border: 1px solid rgba(255,255,255,.5);
@@ -222,7 +233,13 @@ thead th.hl {
   box-shadow: 0 2px 10px rgba(0,0,0,.2);
   border-color: rgba(0,0,0,.3);
 }
-.hm-cell.self { cursor: default; opacity: .35; }
+.hm-cell.self {
+  cursor: default;
+  background: #e8ecf2 !important;
+  color: #9aa5b4 !important;
+  font-size: 10px;
+  font-weight: 600;
+}
 .hm-cell.self:hover { transform: none; box-shadow: none; }
 
 /* ── Loading overlay ── */
@@ -489,11 +506,11 @@ thead th.hl {
   <div class="tab active" data-panel="heatmap">
     <span class="ico">&#x1F7E6;</span> Correlation Matrix
   </div>
-  <div class="tab" data-panel="compare">
-    <span class="ico">&#x1F50D;</span> Compare Two ETFs
-  </div>
   <div class="tab" data-panel="extremes">
     <span class="ico">&#x21C5;</span> Top &amp; Bottom Pairs
+  </div>
+  <div class="tab" data-panel="compare">
+    <span class="ico">&#x1F50D;</span> Compare Two ETFs
   </div>
   <div class="tab" data-panel="howto">
     <span class="ico">&#x2753;</span> How to Use
@@ -521,7 +538,12 @@ thead th.hl {
     </div>
   </div>
 
-  <!-- This single div scrolls in both directions; sticky works inside it -->
+  <!-- Mirror scrollbar at top -->
+  <div class="heatmap-scroll-top" id="heatmap-scroll-top">
+    <div class="heatmap-scroll-top-inner" id="heatmap-scroll-top-inner"></div>
+  </div>
+
+  <!-- Main scroll area — sticky works inside this single container -->
   <div class="heatmap-outer" id="heatmap-outer">
     <table id="heatmap-table"></table>
   </div>
@@ -791,6 +813,29 @@ function buildHeatmap(data) {
   table.appendChild(tbody);
 
   buildExtremes(data);
+  syncScrollbar();
+}
+
+// ── Mirror top scrollbar ──────────────────────────────────────────────────────
+function syncScrollbar() {
+  const outer = document.getElementById('heatmap-outer');
+  const top   = document.getElementById('heatmap-scroll-top');
+  const inner = document.getElementById('heatmap-scroll-top-inner');
+  if (!outer || !top || !inner) return;
+  // Match inner width to table scroll width so the bar has the right range
+  inner.style.width = outer.scrollWidth + 'px';
+  // Two-way sync without feedback loops
+  let syncing = false;
+  top.addEventListener('scroll', () => {
+    if (syncing) return; syncing = true;
+    outer.scrollLeft = top.scrollLeft;
+    syncing = false;
+  });
+  outer.addEventListener('scroll', () => {
+    if (syncing) return; syncing = true;
+    top.scrollLeft = outer.scrollLeft;
+    syncing = false;
+  });
 }
 
 // ── Fetch matrix ──────────────────────────────────────────────────────────────
