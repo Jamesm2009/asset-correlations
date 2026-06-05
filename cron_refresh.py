@@ -1,7 +1,7 @@
 """
 Nightly cron job — hits /refresh to update correlation data.
 Run this from cron-job.org or any scheduler:
-  URL: https://core.market-dashboard.com/refresh
+  URL: https://corr.market-dashboards.com/refresh
   Schedule: Daily at 5:30 PM CT (23:30 UTC)
 
 Or run locally:
@@ -10,7 +10,7 @@ Or run locally:
 import requests
 import sys
 
-URL = "https://core.market-dashboard.com/refresh"
+URL = "https://corr.market-dashboards.com/refresh"
 
 try:
     r = requests.get(URL, timeout=30)
