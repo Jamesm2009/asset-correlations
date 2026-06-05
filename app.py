@@ -42,25 +42,24 @@ _started = False
 
 
 # ── Redis helpers ──────────────────────────────────────────────────────────────
-# Upstash REST API correct usage:
-#   SET with expiry: POST {REDIS_URL}/set/{key}/{value}?EX={seconds}
-#   The value must be URL-safe, so we base64-encode the JSON payload.
-# GET:              GET  {REDIS_URL}/get/{key}
-#   Returns {"result": "<value string>"}
+# Upstash REST pipeline endpoint accepts an array of commands.
+# This is the most reliable method regardless of payload size.
 
 def redis_set(key, value, ex_seconds=90000):
     if not REDIS_URL or not REDIS_TOKEN:
+        print("Redis: credentials not set, skipping.")
         return False
     try:
-        import base64
-        # Serialise to JSON string then base64 so it is URL/path safe
-        json_str = json.dumps(value, separators=(',', ':'))
-        b64_val  = base64.urlsafe_b64encode(json_str.encode()).decode()
-        url = f"{REDIS_URL}/set/{key}/{b64_val}"
+        serialised = json.dumps(value, separators=(',', ':'))
+        # Pipeline: [["SET", key, value, "EX", seconds]]
+        body = json.dumps([["SET", key, serialised, "EX", ex_seconds]])
         r = requests.post(
-            url,
-            headers={"Authorization": f"Bearer {REDIS_TOKEN}"},
-            params={"EX": ex_seconds},
+            f"{REDIS_URL}/pipeline",
+            headers={
+                "Authorization": f"Bearer {REDIS_TOKEN}",
+                "Content-Type":  "application/json",
+            },
+            data=body,
             timeout=20,
         )
         print(f"Redis SET {r.status_code}: {r.text[:120]}")
@@ -74,21 +73,24 @@ def redis_get(key):
     if not REDIS_URL or not REDIS_TOKEN:
         return None
     try:
-        import base64
-        r = requests.get(
-            f"{REDIS_URL}/get/{key}",
-            headers={"Authorization": f"Bearer {REDIS_TOKEN}"},
+        body = json.dumps([["GET", key]])
+        r = requests.post(
+            f"{REDIS_URL}/pipeline",
+            headers={
+                "Authorization": f"Bearer {REDIS_TOKEN}",
+                "Content-Type":  "application/json",
+            },
+            data=body,
             timeout=15,
         )
         if r.status_code != 200:
             print(f"Redis GET {r.status_code}: {r.text[:80]}")
             return None
-        result = r.json().get("result")
+        # Pipeline returns [{"result": "<value>"}]
+        result = r.json()[0].get("result")
         if result is None:
             return None
-        # Decode base64 then parse JSON
-        json_str = base64.urlsafe_b64decode(result.encode()).decode()
-        return json.loads(json_str)
+        return json.loads(result)
     except Exception as e:
         print(f"Redis GET error: {e}")
         return None
@@ -98,9 +100,14 @@ def redis_del(key):
     if not REDIS_URL or not REDIS_TOKEN:
         return
     try:
+        body = json.dumps([["DEL", key]])
         requests.post(
-            f"{REDIS_URL}/del/{key}",
-            headers={"Authorization": f"Bearer {REDIS_TOKEN}"},
+            f"{REDIS_URL}/pipeline",
+            headers={
+                "Authorization": f"Bearer {REDIS_TOKEN}",
+                "Content-Type":  "application/json",
+            },
+            data=body,
             timeout=10,
         )
     except Exception:
@@ -312,6 +319,31 @@ def api_rolling():
 
     data = compute_rolling_corr(prices_df, t1, t2)
     return jsonify({"t1": t1, "t2": t2, "data": data})
+
+
+@app.route("/redis-test")
+def redis_test():
+    """Diagnostic — confirms Redis credentials and pipeline connectivity."""
+    if not REDIS_URL or not REDIS_TOKEN:
+        return jsonify({"error": "REDIS credentials not set in environment"}), 500
+    try:
+        body = json.dumps([["SET", "corr_ping", "pong", "EX", 60], ["GET", "corr_ping"]])
+        r = requests.post(
+            f"{REDIS_URL}/pipeline",
+            headers={
+                "Authorization": f"Bearer {REDIS_TOKEN}",
+                "Content-Type":  "application/json",
+            },
+            data=body,
+            timeout=10,
+        )
+        return jsonify({
+            "status_code": r.status_code,
+            "response":    r.json(),
+            "redis_url":   REDIS_URL[:40] + "...",
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/refresh")
