@@ -229,8 +229,13 @@ header {
 .heatmap-container {
   padding: 16px 20px 32px;
   overflow-x: auto;
+  /* Show scrollbar at top so user doesn't need to scroll to bottom first */
+  transform: rotateX(180deg);
 }
-.heatmap-scroll { overflow: auto; }
+.heatmap-scroll {
+  overflow: visible;
+  transform: rotateX(180deg);
+}
 #heatmap-table {
   border-collapse: collapse;
   font-family: var(--mono);
@@ -244,25 +249,38 @@ header {
 
 /* Row/col label */
 .hl { /* header label */
-  padding: 3px 8px 3px 2px;
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--text2);
+  padding: 3px 10px 3px 2px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text);
   text-align: right;
   cursor: default;
   position: sticky;
   left: 0;
   background: var(--bg);
   z-index: 10;
+  box-shadow: 2px 0 6px rgba(0,0,0,.08);
 }
 .cl { /* column label */
   padding: 2px 0 4px;
   font-size: 9.5px;
-  font-weight: 500;
-  color: var(--text2);
+  font-weight: 700;
+  color: var(--text);
   text-align: center;
   vertical-align: bottom;
   min-width: 32px;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 15;
+}
+/* Corner cell needs both sticky behaviours */
+thead .hl {
+  position: sticky;
+  left: 0;
+  top: 0;
+  z-index: 20;
+  background: var(--bg);
 }
 .cl span {
   display: inline-block;
@@ -283,7 +301,7 @@ header {
   transition: transform .1s, box-shadow .1s;
   position: relative;
   font-size: 9px;
-  font-weight: 500;
+  font-weight: 400;
 }
 .hm-cell:hover {
   transform: scale(1.15);
@@ -462,7 +480,7 @@ header {
   height: 10px;
   width: 200px;
   border-radius: 3px;
-  background: linear-gradient(to right, #67001f, #d6604d, #f7f7f7, #4393c3, #053061);
+  background: linear-gradient(to right, #053061, #4393c3, #f7f7f7, #d6604d, #67001f);
   border: 1px solid var(--border);
 }
 
@@ -500,7 +518,7 @@ header {
     <div class="logo">&#x1F4CA;</div>
     <div>
       <h1>Asset Correlation Matrix</h1>
-      <div class="sub">70 ETFs &mdash; corr.market-dashboards.com</div>
+      <div class="sub">70 ETFs &mdash; core.market-dashboard.com</div>
     </div>
   </div>
   <div class="h-meta">
@@ -566,13 +584,13 @@ header {
     <div class="how-section">
       <h2><span class="ico">&#x1F3A8;</span> Reading the color scale</h2>
       <div class="scale-demo">
-        <div class="scale-swatch"><div class="sw" style="background:#053061"></div> +1.0 (strong positive)</div>
-        <div class="scale-swatch"><div class="sw" style="background:#4393c3"></div> +0.5</div>
+        <div class="scale-swatch"><div class="sw" style="background:#053061"></div> -1.0 (strong inverse)</div>
+        <div class="scale-swatch"><div class="sw" style="background:#4393c3"></div> -0.5</div>
         <div class="scale-swatch"><div class="sw" style="background:#f7f7f7;border:1px solid #ccc"></div> 0.0 (no correlation)</div>
-        <div class="scale-swatch"><div class="sw" style="background:#d6604d"></div> -0.5</div>
-        <div class="scale-swatch"><div class="sw" style="background:#67001f"></div> -1.0 (strong inverse)</div>
+        <div class="scale-swatch"><div class="sw" style="background:#d6604d"></div> +0.5</div>
+        <div class="scale-swatch"><div class="sw" style="background:#67001f"></div> +1.0 (strong positive)</div>
       </div>
-      <p>Dark blue cells indicate assets that move together. Dark red cells indicate assets that move in opposite directions. White/light cells indicate little relationship.</p>
+      <p>Dark red cells indicate assets that move closely together. Dark blue cells indicate assets that move in opposite directions. White/light cells indicate little relationship.</p>
     </div>
 
     <div class="how-section">
@@ -673,17 +691,17 @@ document.querySelectorAll('.tab').forEach(tab => {
 // Scale: -1 = deep red (#67001f), 0 = white (#f7f7f7), +1 = deep blue (#053061)
 // Using a diverging RdBu palette (11-stop)
 const RD_BU = [
-  [-1.00, [103,  0, 31]],
-  [-0.80, [178, 24, 43]],
-  [-0.60, [214, 96, 77]],
-  [-0.40, [244,165,130]],
-  [-0.20, [253,219,199]],
+  [-1.00, [  5, 48, 97]],
+  [-0.80, [  5, 48, 97]],
+  [-0.60, [ 33,102,172]],
+  [-0.40, [ 67,147,195]],
+  [-0.20, [209,229,240]],
   [ 0.00, [247,247,247]],
-  [ 0.20, [209,229,240]],
-  [ 0.40, [ 67,147,195]],
-  [ 0.60, [ 33,102,172]],
-  [ 0.80, [  5, 48, 97]],
-  [ 1.00, [  5, 48, 97]],
+  [ 0.20, [253,219,199]],
+  [ 0.40, [244,165,130]],
+  [ 0.60, [214, 96, 77]],
+  [ 0.80, [178, 24, 43]],
+  [ 1.00, [103,  0, 31]],
 ];
 
 function corrColor(v) {
@@ -755,7 +773,7 @@ function buildHeatmap(data) {
       td.style.color = textColorForBg(val);
 
       if (val !== null && ri !== ci) {
-        td.textContent = val.toFixed(2);
+        td.textContent = val.toFixed(1);
         td.title = `${rowTicker} vs ${colTicker}: ${val.toFixed(4)}`;
         td.addEventListener('click', () => openLightbox(rowTicker, colTicker, val));
       } else if (ri === ci) {
