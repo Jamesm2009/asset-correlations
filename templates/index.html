@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asset Correlation Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #f4f6fb;
+  --surface:   #ffffff;
+  --surface2:  #f8fafc;
+  --border:    #e2e8f2;
+  --border2:   #c8d4e8;
+  --text:      #0f1a2e;
+  --text2:     #4a5568;
+  --text3:     #8898aa;
+  --accent:    #1a56db;
+  --accent2:   #1347bf;
+  --gold:      #b45309;
+  --mono:      'DM Mono', monospace;
+  --sans:      'Sora', sans-serif;
+
+  /* Correlation colour scale */
+  --c-hi:   #053061;   /* +1.0  deep blue */
+  --c-mid:  #f7f7f7;   /* 0.0   white/neutral */
+  --c-lo:   #67001f;   /* -1.0  deep red */
+
+  --header-h: 58px;
+  --tab-h:    42px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 13px;
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+header {
+  height: var(--header-h);
+  background: var(--text);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,.18);
+}
+.h-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.h-brand .logo {
+  width: 30px; height: 30px;
+  background: var(--accent);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+}
+.h-brand h1 {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -.2px;
+  color: #fff;
+}
+.h-brand .sub {
+  font-size: 10.5px;
+  color: #94a3b8;
+  font-weight: 400;
+}
+.h-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  color: #94a3b8;
+}
+.h-meta b { color: #e2e8f0; }
+.btn-sm {
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.18);
+  color: #e2e8f0;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 11px;
+  font-family: var(--sans);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background .15s;
+}
+.btn-sm:hover { background: rgba(255,255,255,.2); }
+
+/* ── Tabs ── */
+.tabs {
+  height: var(--tab-h);
+  background: var(--surface);
+  border-bottom: 2px solid var(--border);
+  display: flex;
+  align-items: flex-end;
+  padding: 0 20px;
+  gap: 0;
+  position: sticky;
+  top: var(--header-h);
+  z-index: 90;
+}
+.tab {
+  padding: 0 18px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color .15s, border-color .15s;
+  user-select: none;
+  white-space: nowrap;
+}
+.tab:hover { color: var(--accent); }
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+.tab .ico { font-size: 14px; }
+
+/* ── Page panels ── */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ── Controls bar ── */
+.controls {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.ctrl-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ctrl-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+/* Toggle switch style for window */
+.window-toggle {
+  display: flex;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+.window-btn {
+  padding: 5px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--sans);
+  border: none;
+  cursor: pointer;
+  background: none;
+  color: var(--text2);
+  transition: background .15s, color .15s;
+}
+.window-btn.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(26,86,219,.3);
+}
+
+.info-badge {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 11px;
+  color: var(--text2);
+}
+.info-badge b { color: var(--text); }
+
+/* Loading overlay */
+#loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(244,246,251,.88);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+#loading-overlay.hidden { display: none; }
+.spinner {
+  width: 44px; height: 44px;
+  border: 3px solid var(--border2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 14px; font-weight: 600; color: var(--text2); }
+.loading-sub  { font-size: 12px; color: var(--text3); }
+
+/* ── Heatmap ── */
+.heatmap-container {
+  padding: 16px 20px 32px;
+  overflow-x: auto;
+}
+.heatmap-scroll { overflow: auto; }
+#heatmap-table {
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 10.5px;
+}
+#heatmap-table th,
+#heatmap-table td {
+  padding: 0;
+  white-space: nowrap;
+}
+
+/* Row/col label */
+.hl { /* header label */
+  padding: 3px 8px 3px 2px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text2);
+  text-align: right;
+  cursor: default;
+  position: sticky;
+  left: 0;
+  background: var(--bg);
+  z-index: 10;
+}
+.cl { /* column label */
+  padding: 2px 0 4px;
+  font-size: 9.5px;
+  font-weight: 500;
+  color: var(--text2);
+  text-align: center;
+  vertical-align: bottom;
+  min-width: 32px;
+}
+.cl span {
+  display: inline-block;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  height: 54px;
+  cursor: default;
+}
+
+/* Heatmap cells */
+.hm-cell {
+  width: 32px;
+  height: 28px;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,.6);
+  transition: transform .1s, box-shadow .1s;
+  position: relative;
+  font-size: 9px;
+  font-weight: 500;
+}
+.hm-cell:hover {
+  transform: scale(1.15);
+  z-index: 20;
+  box-shadow: 0 2px 10px rgba(0,0,0,.18);
+  border-color: rgba(0,0,0,.3);
+}
+.hm-cell.self {
+  cursor: default;
+  opacity: .4;
+}
+.hm-cell.self:hover { transform: none; box-shadow: none; }
+
+/* ── Lightbox ── */
+#lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,26,46,.55);
+  backdrop-filter: blur(4px);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn .18s ease;
+}
+#lightbox.hidden { display: none; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.lb-card {
+  background: var(--surface);
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.22);
+  width: min(760px, 94vw);
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp .2s ease;
+}
+@keyframes slideUp { from { transform: translateY(18px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.lb-header {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.lb-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+.lb-subtitle {
+  font-size: 11.5px;
+  color: var(--text3);
+  margin-top: 3px;
+}
+.lb-close {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  cursor: pointer;
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text2);
+  flex-shrink: 0;
+  transition: background .15s;
+}
+.lb-close:hover { background: var(--border); }
+
+.lb-body {
+  padding: 16px 20px 20px;
+  flex: 1;
+  overflow: auto;
+}
+
+.lb-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.lb-stat {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 14px;
+  min-width: 100px;
+}
+.lb-stat .sv { font-size: 18px; font-weight: 700; font-family: var(--mono); }
+.lb-stat .sl { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+
+#chart-canvas-wrap {
+  position: relative;
+  height: 300px;
+}
+
+/* ── How To Use ── */
+.how-to {
+  max-width: 820px;
+  margin: 32px auto;
+  padding: 0 20px 48px;
+}
+.how-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px 28px;
+  margin-bottom: 20px;
+}
+.how-section h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.how-section h2 .ico { font-size: 18px; }
+.how-section p {
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.65;
+  margin-bottom: 10px;
+}
+.how-section p:last-child { margin-bottom: 0; }
+.how-section ul {
+  padding-left: 18px;
+  color: var(--text2);
+  font-size: 13px;
+  line-height: 1.8;
+}
+.how-section code {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent);
+}
+.scale-demo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+.scale-swatch {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text2);
+}
+.sw {
+  width: 28px; height: 18px;
+  border-radius: 4px;
+  border: 1px solid rgba(0,0,0,.08);
+}
+
+/* ── Legend bar ── */
+.corr-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 10px;
+  color: var(--text3);
+}
+.legend-bar {
+  height: 10px;
+  width: 200px;
+  border-radius: 3px;
+  background: linear-gradient(to right, #67001f, #d6604d, #f7f7f7, #4393c3, #053061);
+  border: 1px solid var(--border);
+}
+
+/* ── Error banner ── */
+.error-banner {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+  padding: 10px 20px;
+  font-size: 12.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+</style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div id="loading-overlay" class="{{ 'hidden' if status == 'ready' else '' }}">
+  <div class="spinner"></div>
+  <div class="loading-text">Building correlation matrix...</div>
+  <div class="loading-sub" id="load-sub">Downloading price data for 70 ETFs</div>
+</div>
+
+{% if error %}
+<div class="error-banner">
+  <span>&#9888;</span> {{ error }}
+</div>
+{% endif %}
+
+<!-- Header -->
+<header>
+  <div class="h-brand">
+    <div class="logo">&#x1F4CA;</div>
+    <div>
+      <h1>Asset Correlation Matrix</h1>
+      <div class="sub">70 ETFs &mdash; core.market-dashboard.com</div>
+    </div>
+  </div>
+  <div class="h-meta">
+    <span>Updated: <b id="h-updated">{{ last_updated or 'Loading...' }}</b></span>
+    <a href="/refresh" class="btn-sm" onclick="return confirmRefresh()">&#x21BB; Refresh Data</a>
+  </div>
+</header>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab active" data-panel="heatmap">
+    <span class="ico">&#x1F7E6;</span> Correlation Matrix
+  </div>
+  <div class="tab" data-panel="howto">
+    <span class="ico">&#x2753;</span> How to Use
+  </div>
+</div>
+
+<!-- ═══ HEATMAP PANEL ═══ -->
+<div class="panel active" id="panel-heatmap">
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="ctrl-group">
+      <span class="ctrl-label">Window</span>
+      <div class="window-toggle">
+        <button class="window-btn active" id="btn-21" onclick="setWindow(21)">1 Month (21 days)</button>
+        <button class="window-btn" id="btn-5" onclick="setWindow(5)">1 Week (5 days)</button>
+      </div>
+    </div>
+    <div class="info-badge" id="data-info">
+      <b id="ticker-count">—</b> tickers &nbsp;|&nbsp; <b id="date-info">—</b>
+    </div>
+    <div class="ctrl-group" style="margin-left:auto;">
+      <div class="corr-legend">
+        <span>-1.0</span>
+        <div class="legend-bar"></div>
+        <span>+1.0</span>
+        &nbsp; Click any cell to see rolling 21-day correlation chart
+      </div>
+    </div>
+  </div>
+
+  <!-- Heatmap -->
+  <div class="heatmap-container">
+    <div class="heatmap-scroll">
+      <div id="heatmap-wrap">
+        <table id="heatmap-table"></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ HOW TO USE PANEL ═══ -->
+<div class="panel" id="panel-howto">
+  <div class="how-to">
+    <div class="how-section">
+      <h2><span class="ico">&#x1F4CA;</span> What is this dashboard?</h2>
+      <p>The Asset Correlation Matrix shows how closely pairs of ETFs move together over a selected time window. It covers <strong>70 ETFs</strong> spanning US equities, sectors, international markets, bonds, commodities, currencies, and thematic strategies.</p>
+      <p>Correlation ranges from <strong>-1.0</strong> (perfect inverse relationship) to <strong>+1.0</strong> (perfectly in lockstep). A value near <strong>0</strong> means the two assets move independently of each other.</p>
+    </div>
+
+    <div class="how-section">
+      <h2><span class="ico">&#x1F3A8;</span> Reading the color scale</h2>
+      <div class="scale-demo">
+        <div class="scale-swatch"><div class="sw" style="background:#053061"></div> +1.0 (strong positive)</div>
+        <div class="scale-swatch"><div class="sw" style="background:#4393c3"></div> +0.5</div>
+        <div class="scale-swatch"><div class="sw" style="background:#f7f7f7;border:1px solid #ccc"></div> 0.0 (no correlation)</div>
+        <div class="scale-swatch"><div class="sw" style="background:#d6604d"></div> -0.5</div>
+        <div class="scale-swatch"><div class="sw" style="background:#67001f"></div> -1.0 (strong inverse)</div>
+      </div>
+      <p>Dark blue cells indicate assets that move together. Dark red cells indicate assets that move in opposite directions. White/light cells indicate little relationship.</p>
+    </div>
+
+    <div class="how-section">
+      <h2><span class="ico">&#x1F4C5;</span> Time windows</h2>
+      <p>Use the toggle to switch between two lookback windows:</p>
+      <ul>
+        <li><strong>1 Month (21 trading days)</strong> &mdash; medium-term correlations, useful for portfolio construction and risk management. Most stable and reliable.</li>
+        <li><strong>1 Week (5 trading days)</strong> &mdash; very short-term correlations, highly sensitive to recent market events or news. Can change rapidly.</li>
+      </ul>
+      <p>Start with the 1-Month view for strategic decisions. Use 1-Week to check if short-term behaviour has diverged from the norm.</p>
+    </div>
+
+    <div class="how-section">
+      <h2><span class="ico">&#x1F4C8;</span> Rolling correlation chart</h2>
+      <p>Click any cell in the heatmap to open a lightbox showing the <strong>rolling 21-day correlation</strong> between those two ETFs over the past 91 trading days (~4.5 months). This lets you see:</p>
+      <ul>
+        <li>Whether the current correlation is typical or an outlier</li>
+        <li>How stable the relationship is over time</li>
+        <li>When correlations spiked (e.g., during a market selloff, correlations often rise toward 1.0)</li>
+      </ul>
+    </div>
+
+    <div class="how-section">
+      <h2><span class="ico">&#x1F4B0;</span> Practical uses</h2>
+      <ul>
+        <li><strong>Diversification:</strong> Look for pairs with low or negative correlation to reduce portfolio volatility.</li>
+        <li><strong>Concentration risk:</strong> High correlation (+0.8 or above) between two holdings means they move together &mdash; you may not be as diversified as you think.</li>
+        <li><strong>Hedging:</strong> Assets with strong negative correlation can act as partial hedges. For example, GLD (gold) and TLT (long bonds) often negatively correlate with equity ETFs in risk-off environments.</li>
+        <li><strong>Regime detection:</strong> When correlations across many pairs suddenly rise together, the market is often in a stress/risk-off regime.</li>
+      </ul>
+    </div>
+
+    <div class="how-section">
+      <h2><span class="ico">&#x23F0;</span> Data &amp; refresh schedule</h2>
+      <p>Price data comes from <strong>Yahoo Finance</strong> via the <code>yfinance</code> library. The dashboard uses <strong>91 trading days</strong> (~4.5 months) of daily closing prices, automatically excluding weekends and holidays via forward-fill.</p>
+      <p>Data is cached in <strong>Upstash Redis</strong> and refreshed nightly via a cron job, so repeated visits during the day are instant. To force a manual refresh, click the <em>Refresh Data</em> button in the header (useful after market close each trading day).</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LIGHTBOX ═══ -->
+<div id="lightbox" class="hidden">
+  <div class="lb-card">
+    <div class="lb-header">
+      <div>
+        <div class="lb-title" id="lb-title">ETF vs ETF</div>
+        <div class="lb-subtitle">Rolling 21-day Pearson correlation &mdash; last 91 trading days</div>
+      </div>
+      <button class="lb-close" onclick="closeLightbox()">&#x2715;</button>
+    </div>
+    <div class="lb-body">
+      <div class="lb-stats">
+        <div class="lb-stat">
+          <div class="sv" id="lb-current">—</div>
+          <div class="sl">Current Correlation</div>
+        </div>
+        <div class="lb-stat">
+          <div class="sv" id="lb-avg">—</div>
+          <div class="sl">Period Average</div>
+        </div>
+        <div class="lb-stat">
+          <div class="sv" id="lb-min">—</div>
+          <div class="sl">Period Min</div>
+        </div>
+        <div class="lb-stat">
+          <div class="sv" id="lb-max">—</div>
+          <div class="sl">Period Max</div>
+        </div>
+      </div>
+      <div id="chart-canvas-wrap">
+        <canvas id="rolling-chart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────────
+let currentWindow = 21;
+let chartInstance = null;
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    const panelId = 'panel-' + tab.dataset.panel;
+    const panel = document.getElementById(panelId);
+    if (panel) panel.classList.add('active');
+  });
+});
+
+// ── Colour interpolation ──────────────────────────────────────────────────────
+// Scale: -1 = deep red (#67001f), 0 = white (#f7f7f7), +1 = deep blue (#053061)
+// Using a diverging RdBu palette (11-stop)
+const RD_BU = [
+  [-1.00, [103,  0, 31]],
+  [-0.80, [178, 24, 43]],
+  [-0.60, [214, 96, 77]],
+  [-0.40, [244,165,130]],
+  [-0.20, [253,219,199]],
+  [ 0.00, [247,247,247]],
+  [ 0.20, [209,229,240]],
+  [ 0.40, [ 67,147,195]],
+  [ 0.60, [ 33,102,172]],
+  [ 0.80, [  5, 48, 97]],
+  [ 1.00, [  5, 48, 97]],
+];
+
+function corrColor(v) {
+  if (v === null || v === undefined) return '#e5e7eb';
+  v = Math.max(-1, Math.min(1, v));
+  for (let i = 0; i < RD_BU.length - 1; i++) {
+    const [lo, cLo] = RD_BU[i];
+    const [hi, cHi] = RD_BU[i + 1];
+    if (v >= lo && v <= hi) {
+      const t = (v - lo) / (hi - lo);
+      const r = Math.round(cLo[0] + t * (cHi[0] - cLo[0]));
+      const g = Math.round(cLo[1] + t * (cHi[1] - cLo[1]));
+      const b = Math.round(cLo[2] + t * (cHi[2] - cLo[2]));
+      return `rgb(${r},${g},${b})`;
+    }
+  }
+  return '#f7f7f7';
+}
+
+function textColorForBg(v) {
+  if (v === null) return '#555';
+  return Math.abs(v) > 0.55 ? '#ffffff' : '#222222';
+}
+
+// ── Build heatmap ─────────────────────────────────────────────────────────────
+function buildHeatmap(data) {
+  const { tickers, matrix, window: w, last_updated } = data;
+  document.getElementById('ticker-count').textContent = tickers.length;
+  document.getElementById('date-info').textContent = last_updated || '';
+  document.getElementById('h-updated').textContent = last_updated || '';
+
+  const table = document.getElementById('heatmap-table');
+  table.innerHTML = '';
+
+  // Header row (rotated column labels)
+  const thead = document.createElement('thead');
+  const hrow  = document.createElement('tr');
+
+  // Corner cell
+  const corner = document.createElement('th');
+  corner.className = 'hl';
+  hrow.appendChild(corner);
+
+  tickers.forEach(t => {
+    const th = document.createElement('th');
+    th.className = 'cl';
+    th.innerHTML = `<span>${t}</span>`;
+    hrow.appendChild(th);
+  });
+  thead.appendChild(hrow);
+  table.appendChild(thead);
+
+  // Body rows
+  const tbody = document.createElement('tbody');
+  tickers.forEach((rowTicker, ri) => {
+    const tr = document.createElement('tr');
+
+    // Row label
+    const lbl = document.createElement('td');
+    lbl.className = 'hl';
+    lbl.textContent = rowTicker;
+    tr.appendChild(lbl);
+
+    matrix[ri].forEach((val, ci) => {
+      const colTicker = tickers[ci];
+      const td = document.createElement('td');
+      td.className = 'hm-cell' + (ri === ci ? ' self' : '');
+      td.style.background = corrColor(val);
+      td.style.color = textColorForBg(val);
+
+      if (val !== null && ri !== ci) {
+        td.textContent = val.toFixed(2);
+        td.title = `${rowTicker} vs ${colTicker}: ${val.toFixed(4)}`;
+        td.addEventListener('click', () => openLightbox(rowTicker, colTicker, val));
+      } else if (ri === ci) {
+        td.textContent = '1';
+      }
+
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+}
+
+// ── Fetch & render matrix ─────────────────────────────────────────────────────
+function loadMatrix(w) {
+  fetch(`/api/matrix?window=${w}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) {
+        // Still loading, poll again
+        setTimeout(() => loadMatrix(w), 4000);
+        return;
+      }
+      hideLoadingOverlay();
+      buildHeatmap(data);
+    })
+    .catch(() => setTimeout(() => loadMatrix(w), 5000));
+}
+
+function setWindow(w) {
+  currentWindow = w;
+  document.getElementById('btn-21').classList.toggle('active', w === 21);
+  document.getElementById('btn-5').classList.toggle('active', w === 5);
+  loadMatrix(w);
+}
+
+// ── Loading overlay ───────────────────────────────────────────────────────────
+function hideLoadingOverlay() {
+  document.getElementById('loading-overlay').classList.add('hidden');
+}
+
+function pollStatus() {
+  fetch('/status')
+    .then(r => r.json())
+    .then(d => {
+      document.getElementById('load-sub').textContent = d.status === 'ready'
+        ? 'Almost done...'
+        : 'Downloading price data for 70 ETFs';
+      if (d.status === 'ready') {
+        loadMatrix(currentWindow);
+      } else {
+        setTimeout(pollStatus, 4000);
+      }
+    })
+    .catch(() => setTimeout(pollStatus, 5000));
+}
+
+// ── Lightbox ──────────────────────────────────────────────────────────────────
+function openLightbox(t1, t2, currentVal) {
+  document.getElementById('lb-title').textContent = `${t1} vs ${t2}`;
+  document.getElementById('lb-current').textContent = currentVal !== null ? currentVal.toFixed(4) : '—';
+  document.getElementById('lb-avg').textContent = '—';
+  document.getElementById('lb-min').textContent = '—';
+  document.getElementById('lb-max').textContent = '—';
+  document.getElementById('lightbox').classList.remove('hidden');
+
+  // Destroy previous chart
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+
+  fetch(`/api/rolling?t1=${t1}&t2=${t2}`)
+    .then(r => r.json())
+    .then(d => {
+      const pts = (d.data || []).filter(p => p.value !== null);
+      if (!pts.length) return;
+
+      const labels = pts.map(p => p.date);
+      const values = pts.map(p => p.value);
+
+      const avg = values.reduce((a,b) => a+b, 0) / values.length;
+      const mn  = Math.min(...values);
+      const mx  = Math.max(...values);
+
+      document.getElementById('lb-avg').textContent = avg.toFixed(4);
+      document.getElementById('lb-min').textContent = mn.toFixed(4);
+      document.getElementById('lb-max').textContent = mx.toFixed(4);
+
+      // Color stat values
+      [['lb-current', currentVal], ['lb-avg', avg], ['lb-min', mn], ['lb-max', mx]].forEach(([id, v]) => {
+        const el = document.getElementById(id);
+        el.style.color = v > 0.5 ? '#1347bf' : v < -0.3 ? '#991b1b' : '#0f1a2e';
+      });
+
+      const ctx = document.getElementById('rolling-chart').getContext('2d');
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: `${t1} / ${t2} rolling 21-day correlation`,
+            data: values,
+            borderColor: '#1a56db',
+            backgroundColor: 'rgba(26,86,219,.07)',
+            borderWidth: 2,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            fill: true,
+            tension: 0.3,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          scales: {
+            x: {
+              ticks: {
+                maxTicksLimit: 8,
+                font: { family: "'DM Mono', monospace", size: 10 },
+                color: '#8898aa',
+              },
+              grid: { color: '#e2e8f2' },
+            },
+            y: {
+              min: -1, max: 1,
+              ticks: {
+                stepSize: 0.25,
+                font: { family: "'DM Mono', monospace", size: 10 },
+                color: '#8898aa',
+              },
+              grid: { color: '#e2e8f2' },
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#0f1a2e',
+              titleFont: { family: "'Sora', sans-serif", size: 11 },
+              bodyFont:  { family: "'DM Mono', monospace", size: 12 },
+              callbacks: {
+                label: ctx => ` Correlation: ${ctx.parsed.y.toFixed(4)}`
+              }
+            },
+            annotation: {
+              annotations: {
+                zero: {
+                  type: 'line',
+                  yMin: 0, yMax: 0,
+                  borderColor: '#94a3b8',
+                  borderWidth: 1,
+                  borderDash: [4, 3],
+                }
+              }
+            }
+          }
+        }
+      });
+    });
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.add('hidden');
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+}
+
+document.getElementById('lightbox').addEventListener('click', e => {
+  if (e.target === document.getElementById('lightbox')) closeLightbox();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeLightbox();
+});
+
+// ── Refresh confirm ───────────────────────────────────────────────────────────
+function confirmRefresh() {
+  if (!confirm('Force a full data refresh? This downloads 91 days of closes for all 70 ETFs and takes about 30 seconds.')) return false;
+  return true;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+const initialStatus = '{{ status }}';
+if (initialStatus === 'ready') {
+  loadMatrix(21);
+} else {
+  pollStatus();
+}
+</script>
+</body>
+</html>

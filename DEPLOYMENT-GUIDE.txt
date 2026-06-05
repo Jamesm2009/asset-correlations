@@ -1,0 +1,266 @@
+=================================================================
+  ASSET CORRELATION DASHBOARD — DEPLOYMENT GUIDE
+  Deploy to Digital Ocean Droplet via Dokku + GitHub Web Console
+  Domain: core.market-dashboard.com
+=================================================================
+
+NO LAPTOP ADMIN RIGHTS NEEDED — everything done via:
+  - GitHub web interface (github.com)
+  - Digital Ocean web console (cloud.digitalocean.com)
+  - cron-job.org (free scheduler)
+
+
+=================================================================
+PART 1 — UPLOAD FILES TO GITHUB
+=================================================================
+
+1. Go to github.com and sign in.
+
+2. Click the green "New" button → create a new repository:
+     Name:    correlation-dashboard
+     Private: your choice
+     → Click "Create repository"
+
+3. On the next screen, click "uploading an existing file".
+
+4. Drag ALL these files into the upload box:
+     app.py
+     requirements.txt
+     Procfile
+     runtime.txt
+     .gitignore
+     cron_refresh.py
+     DEPLOYMENT-GUIDE.txt
+
+5. For the HTML template, you MUST put it in a "templates" folder:
+     - In the upload box, after dragging app.py etc., look for the
+       filename field.  Type:   templates/index.html
+       GitHub will auto-create the templates/ folder.
+     - Then drag index.html into the upload area.
+
+6. Click "Commit changes" (green button).
+
+Your repository should now show:
+    templates/
+        index.html
+    app.py
+    Procfile
+    requirements.txt
+    runtime.txt
+    .gitignore
+
+
+=================================================================
+PART 2 — CREATE A DIGITAL OCEAN DROPLET
+=================================================================
+
+1. Log into cloud.digitalocean.com
+
+2. Click "Create" → "Droplets"
+
+3. Configure:
+     Region:      Choose closest to you (e.g. New York or Chicago)
+     OS Image:    Ubuntu 24.04 LTS  (x64)
+     Size:        Basic → Regular → $6/month (1 GB RAM, 1 CPU)
+                  (or $12/month for 2 GB if budget allows)
+     Auth:        SSH Key (recommended) OR Password
+     Hostname:    correlation-dashboard
+
+4. Click "Create Droplet".  Wait ~60 seconds.
+
+5. Note the Droplet's IP address (e.g. 164.90.xxx.xxx)
+
+
+=================================================================
+PART 3 — INSTALL DOKKU ON THE DROPLET (via Web Console)
+=================================================================
+
+In Digital Ocean, click your Droplet → "Access" tab → "Launch Droplet Console"
+This opens a browser terminal. Run these commands one at a time:
+
+--- Step 3a: Update system ---
+apt-get update && apt-get upgrade -y
+
+--- Step 3b: Install Dokku ---
+wget -NP . https://dokku.com/bootstrap.sh
+sudo DOKKU_TAG=v0.34.4 bash bootstrap.sh
+
+(This takes 3-5 minutes. Wait for the prompt to return.)
+
+--- Step 3c: Set up Dokku ---
+dokku domains:set-global core.market-dashboard.com
+
+--- Step 3d: Create the app ---
+dokku apps:create correlation-dashboard
+
+--- Step 3e: Install Dokku plugins ---
+sudo dokku plugin:install https://github.com/dokku/dokku-letsencrypt.git
+
+--- Step 3f: Set environment variables ---
+(Replace the placeholders with your actual Upstash credentials)
+
+dokku config:set correlation-dashboard \
+  UPSTASH_REDIS_REST_URL="https://YOUR-UPSTASH-URL.upstash.io" \
+  UPSTASH_REDIS_REST_TOKEN="YOUR-UPSTASH-TOKEN" \
+  PORT=5000
+
+--- Step 3g: Configure the domain ---
+dokku domains:set correlation-dashboard core.market-dashboard.com
+
+
+=================================================================
+PART 4 — CONNECT GITHUB TO DOKKU (Auto-deploy on push)
+=================================================================
+
+Option A — Deploy manually via git remote (simplest):
+
+On your local machine OR in the Droplet console:
+
+dokku git:sync correlation-dashboard https://github.com/YOUR-USERNAME/correlation-dashboard.git main
+dokku ps:rebuild correlation-dashboard
+
+Option B — GitHub Actions auto-deploy (recommended for ongoing use):
+
+1. In GitHub repo → Settings → Secrets → Actions → "New repository secret":
+     Name:  DOKKU_SSH_PRIVATE_KEY
+     Value: (your SSH private key — the one you used for the Droplet)
+
+2. Create file .github/workflows/deploy.yml in your repo:
+
+name: Deploy to Dokku
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Deploy to Dokku
+        uses: dokku/github-action@master
+        with:
+          git_remote_url: 'ssh://dokku@YOUR-DROPLET-IP/correlation-dashboard'
+          ssh_private_key: ${{ secrets.DOKKU_SSH_PRIVATE_KEY }}
+
+Replace YOUR-DROPLET-IP with your actual IP address.
+Each push to main will auto-deploy.
+
+
+=================================================================
+PART 5 — CONFIGURE DNS & SSL
+=================================================================
+
+--- Step 5a: Point your domain to the Droplet ---
+In your domain registrar (wherever you bought core.market-dashboard.com):
+  Add an A record:
+    Host:  core   (or @  if it's the root domain)
+    Value: YOUR-DROPLET-IP
+    TTL:   3600
+
+Wait 10-30 minutes for DNS to propagate.
+
+--- Step 5b: Enable HTTPS (free Let's Encrypt SSL) ---
+In the Droplet console:
+
+dokku letsencrypt:set correlation-dashboard email YOUR@EMAIL.COM
+dokku letsencrypt:enable correlation-dashboard
+
+Your app is now live at https://core.market-dashboard.com !
+
+
+=================================================================
+PART 6 — SET UP NIGHTLY CRON REFRESH
+=================================================================
+
+1. Go to https://cron-job.org and create a free account.
+
+2. Click "Create Cronjob":
+     Title:    ETF Correlation Refresh
+     URL:      https://core.market-dashboard.com/refresh
+     Schedule: Every day at 5:30 PM (17:30) — or pick your preferred time
+               (after 4 PM ET / 3 PM CT when US markets close)
+     → Save
+
+This automatically refreshes price data each evening.
+You can also click the Refresh Data button in the dashboard header manually.
+
+
+=================================================================
+PART 7 — GET UPSTASH REDIS CREDENTIALS
+=================================================================
+
+1. Go to https://upstash.com and create a free account.
+
+2. Click "Create Database":
+     Name:    correlation-cache
+     Region:  US-East-1  (or closest to your Droplet)
+     Plan:    Free tier  (10,000 commands/day — more than enough)
+
+3. After creation, click the database → "REST API" tab.
+   Copy:
+     UPSTASH_REDIS_REST_URL   (looks like https://xxx.upstash.io)
+     UPSTASH_REDIS_REST_TOKEN (long string)
+
+4. Paste these into the Dokku config command in Step 3f above.
+
+
+=================================================================
+TROUBLESHOOTING
+=================================================================
+
+Problem: App not showing after deploy
+→ In Droplet console: dokku logs correlation-dashboard --tail
+  This shows the app's live log output.
+
+Problem: "502 Bad Gateway"
+→ Check if app is running: dokku ps:report correlation-dashboard
+→ Restart: dokku ps:restart correlation-dashboard
+
+Problem: Data shows as "Loading..." forever
+→ Check UPSTASH credentials are set: dokku config correlation-dashboard
+→ Check logs: dokku logs correlation-dashboard --tail 100
+
+Problem: Domain not resolving
+→ DNS propagation can take up to 24 hours.
+→ Test with: curl http://YOUR-DROPLET-IP (bypasses DNS)
+
+Problem: SSL certificate failed
+→ Ensure DNS is fully propagated first, then re-run:
+  dokku letsencrypt:enable correlation-dashboard
+
+
+=================================================================
+ONGOING MAINTENANCE
+=================================================================
+
+Update the app (push new code to GitHub, then):
+  dokku git:sync correlation-dashboard https://github.com/YOUR-USERNAME/correlation-dashboard.git main
+  dokku ps:rebuild correlation-dashboard
+
+Check app status:
+  dokku ps:report correlation-dashboard
+
+View logs:
+  dokku logs correlation-dashboard --tail 50
+
+Restart app:
+  dokku ps:restart correlation-dashboard
+
+View environment variables:
+  dokku config correlation-dashboard
+
+=================================================================
+COST SUMMARY (approximate monthly)
+=================================================================
+
+  Digital Ocean Droplet ($6/mo Basic):  $6.00
+  Domain (if not owned):                ~$1.50/mo
+  Upstash Redis (free tier):            $0.00
+  Let's Encrypt SSL:                    $0.00
+  cron-job.org:                         $0.00
+  ─────────────────────────────────────────────
+  TOTAL:                                ~$7.50/mo
+
+=================================================================
