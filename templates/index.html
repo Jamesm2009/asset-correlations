@@ -21,18 +21,16 @@
   --sans:     'Sora', sans-serif;
   --header-h: 58px;
   --tab-h:    42px;
-  --ctrl-h:   50px;
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; }
+html { height: 100%; }
 body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--sans);
   font-size: 13px;
-  display: flex;
-  flex-direction: column;
   min-height: 100vh;
+  /* NO flex on body — this was causing bleed-through */
 }
 
 /* ── Header ── */
@@ -43,51 +41,52 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
-  flex-shrink: 0;
-  box-shadow: 0 2px 12px rgba(0,0,0,.2);
+  padding: 0 16px;
   position: sticky;
   top: 0;
   z-index: 200;
+  box-shadow: 0 2px 12px rgba(0,0,0,.2);
 }
-.h-brand { display: flex; align-items: center; gap: 10px; }
+.h-brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .h-brand .logo {
-  width: 30px; height: 30px;
-  background: var(--accent);
-  border-radius: 7px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 15px;
+  width: 28px; height: 28px; flex-shrink: 0;
+  background: var(--accent); border-radius: 6px;
+  display: flex; align-items: center; justify-content: center; font-size: 14px;
 }
-.h-brand h1 { font-size: 15px; font-weight: 700; color: #fff; }
-.h-brand .sub { font-size: 10.5px; color: #94a3b8; }
-.h-meta { display: flex; align-items: center; gap: 12px; font-size: 11px; color: #94a3b8; }
+.h-brand h1 { font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; }
+.h-brand .sub { font-size: 10px; color: #94a3b8; white-space: nowrap; }
+.h-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #94a3b8; flex-shrink: 0; }
 .h-meta b { color: #e2e8f0; }
+.h-updated-label { display: none; }
+@media (min-width: 520px) { .h-updated-label { display: inline; } }
 .btn-sm {
-  background: rgba(255,255,255,.1);
-  border: 1px solid rgba(255,255,255,.18);
-  color: #e2e8f0; border-radius: 6px;
-  padding: 5px 12px; font-size: 11px;
-  font-family: var(--sans); cursor: pointer;
-  text-decoration: none; transition: background .15s;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18);
+  color: #e2e8f0; border-radius: 6px; padding: 5px 10px; font-size: 11px;
+  font-family: var(--sans); cursor: pointer; text-decoration: none;
+  white-space: nowrap; transition: background .15s;
 }
 .btn-sm:hover { background: rgba(255,255,255,.2); }
 
 /* ── Tabs ── */
 .tabs {
-  height: var(--tab-h);
   background: var(--surface);
   border-bottom: 2px solid var(--border);
   display: flex; align-items: flex-end;
-  padding: 0 20px;
-  flex-shrink: 0;
+  padding: 0 4px;
   position: sticky;
   top: var(--header-h);
   z-index: 190;
+  /* Scrollable on mobile so tabs never get cut off */
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
+.tabs::-webkit-scrollbar { display: none; }
 .tab {
-  padding: 0 18px; height: 40px;
-  display: flex; align-items: center; gap: 7px;
-  font-size: 12.5px; font-weight: 600;
+  padding: 0 14px; height: 40px; flex-shrink: 0;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600;
   color: var(--text3); cursor: pointer;
   border-bottom: 2px solid transparent;
   margin-bottom: -2px;
@@ -96,22 +95,26 @@ header {
 }
 .tab:hover { color: var(--accent); }
 .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-.tab .ico { font-size: 14px; }
+.tab .ico { font-size: 13px; }
 
-/* ── Panels ── */
+/* ── Panels — block layout, no flex on body ── */
 .panel { display: none; }
-.panel.active { display: flex; flex-direction: column; }
+.panel.active { display: block; }
 
-/* ── Controls bar ── */
+/* Heatmap panel needs flex-column internally for sticky+scroll to work */
+#panel-heatmap.active {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--header-h) - var(--tab-h));
+}
+
+/* ── Controls bar — inside heatmap panel only ── */
 .controls {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
-  padding: 8px 20px;
-  display: flex; align-items: center; gap: 16px;
+  padding: 8px 16px;
+  display: flex; align-items: center; gap: 12px;
   flex-wrap: wrap; flex-shrink: 0;
-  position: sticky;
-  top: calc(var(--header-h) + var(--tab-h));
-  z-index: 180;
 }
 .ctrl-label {
   font-size: 11px; font-weight: 600;
@@ -123,11 +126,12 @@ header {
   border-radius: 8px; padding: 2px; gap: 2px;
 }
 .window-btn {
-  padding: 5px 16px; border-radius: 6px;
+  padding: 5px 14px; border-radius: 6px;
   font-size: 12px; font-weight: 600;
   font-family: var(--sans); border: none;
   cursor: pointer; background: none;
   color: var(--text2); transition: background .15s, color .15s;
+  white-space: nowrap;
 }
 .window-btn.active {
   background: var(--accent); color: #fff;
@@ -135,42 +139,39 @@ header {
 }
 .info-badge {
   background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 6px; padding: 5px 12px;
+  border-radius: 6px; padding: 5px 10px;
   font-size: 11px; color: var(--text2);
+  white-space: nowrap;
 }
 .info-badge b { color: var(--text); }
 .corr-legend {
   margin-left: auto; display: flex;
   align-items: center; gap: 6px;
   font-size: 10px; color: var(--text3);
+  flex-wrap: wrap;
 }
 .legend-bar {
-  height: 10px; width: 180px; border-radius: 3px;
+  height: 10px; width: 140px; border-radius: 3px;
   background: linear-gradient(to right, #053061, #4393c3, #f7f7f7, #d6604d, #67001f);
   border: 1px solid var(--border);
 }
-
-/* ── Heatmap panel layout ── */
-#panel-heatmap {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
+/* Hide legend text on small screens */
+@media (max-width: 640px) {
+  .corr-legend .legend-hint { display: none; }
+  .corr-legend { margin-left: 0; }
 }
-/* Fake top scrollbar strip */
+
+/* ── Heatmap scroll area ── */
 .heatmap-scroll-top {
-  overflow-x: auto;
-  overflow-y: hidden;
-  height: 12px;
-  flex-shrink: 0;
+  overflow-x: auto; overflow-y: hidden;
+  height: 12px; flex-shrink: 0;
   margin: 0 16px;
   border-bottom: 1px solid var(--border);
+  scrollbar-width: thin;
 }
-.heatmap-scroll-top-inner {
-  height: 1px;  /* just needs width set by JS */
-}
+.heatmap-scroll-top-inner { height: 1px; }
 .heatmap-outer {
-  flex: 1;
+  flex: 1; min-height: 0;
   overflow: auto;
   padding: 0 16px 24px;
 }
@@ -180,24 +181,18 @@ header {
   border-collapse: collapse;
   font-family: var(--mono);
   font-size: 10.5px;
-  /* Do NOT set a width — let it be as wide as needed */
 }
 #heatmap-table th,
 #heatmap-table td { padding: 0; white-space: nowrap; }
 
-/* Row label (sticky left) */
 .hl {
   padding: 3px 10px 3px 2px;
   font-size: 10.5px; font-weight: 700;
-  color: var(--text); text-align: right;
-  cursor: default;
+  color: var(--text); text-align: right; cursor: default;
   position: sticky; left: 0; z-index: 10;
   background: var(--bg);
-  /* Shadow creates visible separator so cells don't bleed under the label */
   box-shadow: 3px 0 8px -2px rgba(0,0,0,.14);
 }
-
-/* Column label (sticky top) */
 .cl {
   padding: 2px 0 4px;
   font-size: 9.5px; font-weight: 700;
@@ -207,7 +202,6 @@ header {
   background: var(--bg);
   box-shadow: 0 3px 6px -2px rgba(0,0,0,.1);
 }
-/* Corner cell: sticky in both directions */
 thead th.hl {
   position: sticky; left: 0; top: 0;
   z-index: 20; background: var(--bg);
@@ -218,8 +212,6 @@ thead th.hl {
   transform: rotate(180deg);
   height: 52px; cursor: default;
 }
-
-/* Heatmap cells */
 .hm-cell {
   width: 36px; height: 30px;
   text-align: center; vertical-align: middle;
@@ -237,8 +229,7 @@ thead th.hl {
   cursor: default;
   background: #e8ecf2 !important;
   color: #9aa5b4 !important;
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 10px; font-weight: 600;
 }
 .hm-cell.self:hover { transform: none; box-shadow: none; }
 
@@ -275,8 +266,7 @@ thead th.hl {
 #lightbox.hidden { display: none; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 .lb-card {
-  background: var(--surface);
-  border-radius: 14px;
+  background: var(--surface); border-radius: 14px;
   box-shadow: 0 20px 60px rgba(0,0,0,.22);
   width: min(760px, 94vw); max-height: 90vh;
   overflow: hidden; display: flex; flex-direction: column;
@@ -287,18 +277,17 @@ thead th.hl {
   to   { transform: translateY(0);    opacity: 1; }
 }
 .lb-header {
-  padding: 16px 20px 12px;
-  border-bottom: 1px solid var(--border);
+  padding: 16px 20px 12px; border-bottom: 1px solid var(--border);
   display: flex; align-items: flex-start;
   justify-content: space-between; gap: 12px;
 }
 .lb-title { font-size: 16px; font-weight: 700; }
 .lb-subtitle { font-size: 11.5px; color: var(--text3); margin-top: 3px; }
 .lb-close {
-  width: 30px; height: 30px;
-  border-radius: 8px; border: 1px solid var(--border);
-  background: var(--surface2); cursor: pointer;
-  font-size: 16px; display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--surface2);
+  cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
   color: var(--text2); flex-shrink: 0; transition: background .15s;
 }
 .lb-close:hover { background: var(--border); }
@@ -306,97 +295,60 @@ thead th.hl {
 .lb-stats { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
 .lb-stat {
   background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 8px; padding: 8px 14px; min-width: 100px;
+  border-radius: 8px; padding: 8px 14px; min-width: 90px;
 }
 .lb-stat .sv { font-size: 18px; font-weight: 700; font-family: var(--mono); }
 .lb-stat .sl { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
-#chart-canvas-wrap { position: relative; height: 300px; }
+#chart-canvas-wrap { position: relative; height: 280px; }
 
 /* ── Compare tab ── */
-.compare-wrap {
-  max-width: 860px; margin: 28px auto;
-  padding: 0 20px 48px;
-}
+.compare-wrap { max-width: 860px; margin: 24px auto; padding: 0 16px 48px; }
 .compare-search {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 22px 24px;
-  margin-bottom: 20px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px 20px; margin-bottom: 20px;
 }
 .compare-search h2 { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
-.compare-row {
-  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-}
-.compare-input-wrap { position: relative; }
+.compare-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .compare-input {
-  width: 120px; padding: 9px 14px;
-  border: 2px solid var(--border2);
-  border-radius: 8px; font-size: 14px;
-  font-family: var(--mono); font-weight: 700;
-  text-transform: uppercase;
-  color: var(--text); background: var(--surface);
+  width: 110px; padding: 9px 12px;
+  border: 2px solid var(--border2); border-radius: 8px;
+  font-size: 14px; font-family: var(--mono); font-weight: 700;
+  text-transform: uppercase; color: var(--text); background: var(--surface);
   outline: none; transition: border-color .15s;
 }
 .compare-input:focus { border-color: var(--accent); }
-.compare-vs {
-  font-size: 16px; font-weight: 700;
-  color: var(--text3); padding: 0 4px;
-}
+.compare-vs { font-size: 16px; font-weight: 700; color: var(--text3); }
 .compare-btn {
-  padding: 9px 22px;
-  background: var(--accent); color: #fff;
-  border: none; border-radius: 8px;
-  font-size: 13px; font-weight: 700;
-  font-family: var(--sans); cursor: pointer;
-  transition: background .15s;
+  padding: 9px 20px; background: var(--accent); color: #fff;
+  border: none; border-radius: 8px; font-size: 13px; font-weight: 700;
+  font-family: var(--sans); cursor: pointer; transition: background .15s;
 }
 .compare-btn:hover { background: #1347bf; }
-.compare-hint {
-  font-size: 11px; color: var(--text3);
-  margin-top: 10px;
-}
+.compare-hint { font-size: 11px; color: var(--text3); margin-top: 10px; }
 .compare-result {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px 24px;
-  display: none;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px; display: none;
 }
 .compare-result.visible { display: block; }
-.compare-result-header {
-  display: flex; align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px; flex-wrap: wrap; gap: 8px;
-}
-.compare-pair-title {
-  font-size: 20px; font-weight: 700;
-  font-family: var(--mono);
-}
+.compare-pair-title { font-size: 20px; font-weight: 700; font-family: var(--mono); margin-bottom: 14px; }
 .compare-stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
 .cstat {
   background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 8px; padding: 10px 16px; min-width: 110px;
+  border-radius: 8px; padding: 10px 14px; min-width: 100px;
 }
 .cstat .cv { font-size: 20px; font-weight: 700; font-family: var(--mono); }
 .cstat .cl2 { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-top: 3px; }
-#compare-chart-wrap { position: relative; height: 320px; }
+#compare-chart-wrap { position: relative; height: 300px; }
 .compare-error {
-  background: #fff5f5; border: 1px solid #fca5a5;
-  color: #991b1b; border-radius: 8px;
-  padding: 12px 16px; font-size: 13px; margin-top: 12px;
-  display: none;
+  background: #fff5f5; border: 1px solid #fca5a5; color: #991b1b;
+  border-radius: 8px; padding: 12px 16px; font-size: 13px; margin-top: 12px; display: none;
 }
 .compare-error.visible { display: block; }
 
 /* ── Top/Bottom pairs ── */
-.extremes-wrap {
-  max-width: 900px; margin: 28px auto;
-  padding: 0 20px 48px;
-}
+.extremes-wrap { max-width: 900px; margin: 24px auto; padding: 0 16px 48px; }
 .extremes-top-bar {
-  display: flex; align-items: center;
-  justify-content: space-between;
+  display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 18px; flex-wrap: wrap; gap: 8px;
 }
 .extremes-window-note {
@@ -405,18 +357,12 @@ thead th.hl {
   border-radius: 6px; padding: 5px 12px;
 }
 .extremes-hint { font-size: 11.5px; color: var(--text3); }
-.extremes-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
-}
+.extremes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 @media (max-width: 680px) { .extremes-grid { grid-template-columns: 1fr; } }
-.ext-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 12px; overflow: hidden;
-}
+.ext-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
 .ext-card-title {
   padding: 14px 18px 12px; font-size: 13px; font-weight: 700;
-  display: flex; flex-direction: column; gap: 3px;
-  border-bottom: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 3px; border-bottom: 1px solid var(--border);
 }
 .ext-card-sub { font-size: 11px; font-weight: 400; opacity: .75; }
 .ext-high { background: #fff5f5; color: #7f1d1d; }
@@ -429,40 +375,32 @@ thead th.hl {
   border-bottom: 1px solid var(--border); background: var(--surface2);
 }
 .ext-table thead th:nth-child(2) { text-align: right; }
-.ext-table tbody tr {
-  border-bottom: 1px solid var(--border);
-  cursor: pointer; transition: background .12s;
-}
+.ext-table tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .12s; }
 .ext-table tbody tr:last-child { border-bottom: none; }
 .ext-table tbody tr:hover { background: #f0f7ff; }
 .ext-table td { padding: 11px 18px; font-size: 12.5px; vertical-align: middle; }
 .ext-pair { font-weight: 700; color: var(--text); font-size: 13px; }
 .ext-val  { text-align: right; font-weight: 700; font-size: 15px; }
 .ext-swatch {
-  width: 14px; height: 14px; border-radius: 3px;
-  display: inline-block; vertical-align: middle;
-  border: 1px solid rgba(0,0,0,.1); margin-left: 8px;
+  width: 14px; height: 14px; border-radius: 3px; display: inline-block;
+  vertical-align: middle; border: 1px solid rgba(0,0,0,.1); margin-left: 8px;
 }
 .ext-arrow { text-align: right; color: var(--text3); font-size: 14px; }
 .ext-empty { text-align: center; padding: 24px; color: var(--text3); font-family: var(--sans); font-size: 12px; }
 
 /* ── How to Use ── */
-.how-to { max-width: 820px; margin: 28px auto; padding: 0 20px 48px; }
+.how-to { max-width: 820px; margin: 24px auto; padding: 0 16px 48px; }
 .how-section {
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: 12px; padding: 22px 26px; margin-bottom: 18px;
+  border-radius: 12px; padding: 20px 22px; margin-bottom: 16px;
 }
-.how-section h2 {
-  font-size: 15px; font-weight: 700; margin-bottom: 10px;
-  display: flex; align-items: center; gap: 8px;
-}
+.how-section h2 { font-size: 15px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
 .how-section p { font-size: 13px; color: var(--text2); line-height: 1.65; margin-bottom: 10px; }
 .how-section p:last-child { margin-bottom: 0; }
 .how-section ul { padding-left: 18px; color: var(--text2); font-size: 13px; line-height: 1.8; }
 .how-section code {
-  background: var(--bg); border: 1px solid var(--border);
-  border-radius: 4px; padding: 1px 6px;
-  font-family: var(--mono); font-size: 12px; color: var(--accent);
+  background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+  padding: 1px 6px; font-family: var(--mono); font-size: 12px; color: var(--accent);
 }
 .scale-demo { display: flex; align-items: center; gap: 12px; margin: 12px 0; flex-wrap: wrap; }
 .scale-swatch { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
@@ -471,8 +409,7 @@ thead th.hl {
 /* Error banner */
 .error-banner {
   background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b;
-  padding: 10px 20px; font-size: 12.5px;
-  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px; font-size: 12.5px; display: flex; align-items: center; gap: 8px;
 }
 </style>
 </head>
@@ -497,11 +434,12 @@ thead th.hl {
     </div>
   </div>
   <div class="h-meta">
-    <span>Updated: <b id="h-updated">{{ last_updated or 'Loading...' }}</b></span>
-    <a href="/refresh" class="btn-sm" onclick="return confirmRefresh()">&#x21BB; Refresh Data</a>
+    <span class="h-updated-label">Updated:</span> <b id="h-updated">{{ last_updated or 'Loading...' }}</b>
+    <a href="/refresh" class="btn-sm" onclick="return confirmRefresh()">&#x21BB; Refresh</a>
   </div>
 </header>
 
+<!-- Tabs — horizontally scrollable on mobile, no wrapping -->
 <div class="tabs">
   <div class="tab active" data-panel="heatmap">
     <span class="ico">&#x1F7E6;</span> Correlation Matrix
@@ -519,13 +457,14 @@ thead th.hl {
 
 
 <!-- ═══ HEATMAP PANEL ═══ -->
+<!-- Controls and scroll area are INSIDE this panel so they hide with it -->
 <div class="panel active" id="panel-heatmap">
 
   <div class="controls">
     <span class="ctrl-label">Window</span>
     <div class="window-toggle">
-      <button class="window-btn active" id="btn-21" onclick="setWindow(21)">1 Month (21 days)</button>
-      <button class="window-btn"        id="btn-5"  onclick="setWindow(5)">1 Week (5 days)</button>
+      <button class="window-btn active" id="btn-21" onclick="setWindow(21)">1 Month (21d)</button>
+      <button class="window-btn"        id="btn-5"  onclick="setWindow(5)">1 Week (5d)</button>
     </div>
     <div class="info-badge">
       <b id="ticker-count">—</b> tickers &nbsp;|&nbsp; <b id="date-info">—</b>
@@ -534,67 +473,18 @@ thead th.hl {
       <span>-1.0</span>
       <div class="legend-bar"></div>
       <span>+1.0</span>
-      &nbsp;&nbsp;Click any cell for rolling chart
+      <span class="legend-hint">&nbsp;&nbsp;Click any cell for rolling chart</span>
     </div>
   </div>
 
-  <!-- Mirror scrollbar at top -->
   <div class="heatmap-scroll-top" id="heatmap-scroll-top">
     <div class="heatmap-scroll-top-inner" id="heatmap-scroll-top-inner"></div>
   </div>
 
-  <!-- Main scroll area — sticky works inside this single container -->
   <div class="heatmap-outer" id="heatmap-outer">
     <table id="heatmap-table"></table>
   </div>
 
-</div>
-
-
-<!-- ═══ COMPARE TWO ETFS PANEL ═══ -->
-<div class="panel" id="panel-compare">
-  <div class="compare-wrap">
-
-    <div class="compare-search">
-      <h2>&#x1F50D; Compare Any Two ETFs</h2>
-      <div class="compare-row">
-        <input class="compare-input" id="cmp-t1" maxlength="6" placeholder="e.g. SPY" autocomplete="off" />
-        <span class="compare-vs">vs</span>
-        <input class="compare-input" id="cmp-t2" maxlength="6" placeholder="e.g. TLT" autocomplete="off" />
-        <button class="compare-btn" onclick="runCompare()">Compare</button>
-      </div>
-      <div class="compare-hint">Enter any two tickers available in the dataset (45 ETFs). Press Enter or click Compare.</div>
-      <div class="compare-error" id="cmp-error"></div>
-    </div>
-
-    <div class="compare-result" id="cmp-result">
-      <div class="compare-result-header">
-        <div class="compare-pair-title" id="cmp-title">SPY vs TLT</div>
-      </div>
-      <div class="compare-stats">
-        <div class="cstat">
-          <div class="cv" id="cmp-current">—</div>
-          <div class="cl2">Current (21d)</div>
-        </div>
-        <div class="cstat">
-          <div class="cv" id="cmp-avg">—</div>
-          <div class="cl2">Period Avg</div>
-        </div>
-        <div class="cstat">
-          <div class="cv" id="cmp-min">—</div>
-          <div class="cl2">Period Min</div>
-        </div>
-        <div class="cstat">
-          <div class="cv" id="cmp-max">—</div>
-          <div class="cl2">Period Max</div>
-        </div>
-      </div>
-      <div id="compare-chart-wrap">
-        <canvas id="compare-chart"></canvas>
-      </div>
-    </div>
-
-  </div>
 </div>
 
 
@@ -631,6 +521,34 @@ thead th.hl {
 </div>
 
 
+<!-- ═══ COMPARE TWO ETFS PANEL ═══ -->
+<div class="panel" id="panel-compare">
+  <div class="compare-wrap">
+    <div class="compare-search">
+      <h2>&#x1F50D; Compare Any Two ETFs</h2>
+      <div class="compare-row">
+        <input class="compare-input" id="cmp-t1" maxlength="6" placeholder="e.g. SPY" autocomplete="off" />
+        <span class="compare-vs">vs</span>
+        <input class="compare-input" id="cmp-t2" maxlength="6" placeholder="e.g. TLT" autocomplete="off" />
+        <button class="compare-btn" onclick="runCompare()">Compare</button>
+      </div>
+      <div class="compare-hint">Enter any two tickers in the dataset (45 ETFs). Press Enter or click Compare.</div>
+      <div class="compare-error" id="cmp-error"></div>
+    </div>
+    <div class="compare-result" id="cmp-result">
+      <div class="compare-pair-title" id="cmp-title">SPY vs TLT</div>
+      <div class="compare-stats">
+        <div class="cstat"><div class="cv" id="cmp-current">—</div><div class="cl2">Current (21d)</div></div>
+        <div class="cstat"><div class="cv" id="cmp-avg">—</div><div class="cl2">Period Avg</div></div>
+        <div class="cstat"><div class="cv" id="cmp-min">—</div><div class="cl2">Period Min</div></div>
+        <div class="cstat"><div class="cv" id="cmp-max">—</div><div class="cl2">Period Max</div></div>
+      </div>
+      <div id="compare-chart-wrap"><canvas id="compare-chart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+
 <!-- ═══ HOW TO USE PANEL ═══ -->
 <div class="panel" id="panel-howto">
   <div class="how-to">
@@ -659,7 +577,7 @@ thead th.hl {
     </div>
     <div class="how-section">
       <h2>&#x1F50D; Compare Two ETFs tab</h2>
-      <p>Type any two ticker symbols to instantly see their rolling 21-day correlation over the full 91-day data window, even if they are not in the main 45-ticker list (as long as the data is available).</p>
+      <p>Type any two ticker symbols to instantly see their rolling 21-day correlation over the full 91-day data window.</p>
     </div>
     <div class="how-section">
       <h2>&#x1F4B0; Practical uses</h2>
@@ -672,7 +590,7 @@ thead th.hl {
     </div>
     <div class="how-section">
       <h2>&#x23F0; Data and refresh</h2>
-      <p>Prices come from <strong>Yahoo Finance</strong> via <code>yfinance</code>. The dashboard uses <strong>91 trading days</strong> of daily closes, with weekends and holidays forward-filled. Data is cached in <strong>Upstash Redis</strong> and refreshed nightly via cron. Click <em>Refresh Data</em> in the header to force an immediate update after market close.</p>
+      <p>Prices come from <strong>Yahoo Finance</strong> via <code>yfinance</code>. The dashboard uses <strong>91 trading days</strong> of daily closes, with weekends and holidays forward-filled. Cached in <strong>Upstash Redis</strong> and refreshed nightly via cron. Click <em>Refresh</em> in the header to force an immediate update after market close.</p>
     </div>
   </div>
 </div>
@@ -703,7 +621,6 @@ thead th.hl {
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
-// ── State ──────────────────────────────────────────────────────────────────────
 let currentWindow  = 21;
 let lightboxChart  = null;
 let compareChart   = null;
@@ -713,9 +630,14 @@ let lastMatrixData = null;
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => {
+      p.classList.remove('active');
+      // Reset heatmap panel display — it needs special flex treatment
+      if (p.id === 'panel-heatmap') p.style.display = '';
+    });
     tab.classList.add('active');
-    document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
+    const panel = document.getElementById('panel-' + tab.dataset.panel);
+    if (panel) panel.classList.add('active');
   });
 });
 
@@ -733,7 +655,6 @@ const SCALE = [
   [ 0.80, [178, 24, 43]],
   [ 1.00, [103,  0, 31]],
 ];
-
 function corrColor(v) {
   if (v === null || v === undefined) return '#e5e7eb';
   v = Math.max(-1, Math.min(1, v));
@@ -742,10 +663,7 @@ function corrColor(v) {
     const [hi, cHi] = SCALE[i + 1];
     if (v >= lo && v <= hi) {
       const t = (v - lo) / (hi - lo);
-      const r = Math.round(cLo[0] + t * (cHi[0] - cLo[0]));
-      const g = Math.round(cLo[1] + t * (cHi[1] - cLo[1]));
-      const b = Math.round(cLo[2] + t * (cHi[2] - cLo[2]));
-      return `rgb(${r},${g},${b})`;
+      return `rgb(${Math.round(cLo[0]+t*(cHi[0]-cLo[0]))},${Math.round(cLo[1]+t*(cHi[1]-cLo[1]))},${Math.round(cLo[2]+t*(cHi[2]-cLo[2]))})`;
     }
   }
   return '#f7f7f7';
@@ -758,7 +676,6 @@ function textColor(v) {
 function buildHeatmap(data) {
   lastMatrixData = data;
   const { tickers, matrix, window: w, last_updated } = data;
-
   document.getElementById('ticker-count').textContent = tickers.length;
   document.getElementById('date-info').textContent    = last_updated || '';
   document.getElementById('h-updated').textContent    = last_updated || '';
@@ -766,17 +683,13 @@ function buildHeatmap(data) {
   const table = document.getElementById('heatmap-table');
   table.innerHTML = '';
 
-  // ── Header row ──
   const thead = document.createElement('thead');
   const hrow  = document.createElement('tr');
-
-  // Corner
-  const corner    = document.createElement('th');
+  const corner = document.createElement('th');
   corner.className = 'hl';
   hrow.appendChild(corner);
-
   tickers.forEach(t => {
-    const th    = document.createElement('th');
+    const th = document.createElement('th');
     th.className = 'cl';
     th.innerHTML = `<span>${t}</span>`;
     hrow.appendChild(th);
@@ -784,7 +697,6 @@ function buildHeatmap(data) {
   thead.appendChild(hrow);
   table.appendChild(thead);
 
-  // ── Body rows ──
   const tbody = document.createElement('tbody');
   tickers.forEach((rowT, ri) => {
     const tr  = document.createElement('tr');
@@ -792,19 +704,17 @@ function buildHeatmap(data) {
     lbl.className   = 'hl';
     lbl.textContent = rowT;
     tr.appendChild(lbl);
-
     matrix[ri].forEach((val, ci) => {
-      const colT = tickers[ci];
-      const td   = document.createElement('td');
-      td.className       = 'hm-cell' + (ri === ci ? ' self' : '');
+      const td = document.createElement('td');
+      td.className        = 'hm-cell' + (ri === ci ? ' self' : '');
       td.style.background = corrColor(val);
       td.style.color      = textColor(val);
       if (ri === ci) {
         td.textContent = '1';
       } else if (val !== null) {
         td.textContent = val.toFixed(1);
-        td.title       = `${rowT} vs ${colT}: ${val.toFixed(4)}`;
-        td.addEventListener('click', () => openLightbox(rowT, colT, val));
+        td.title       = `${rowT} vs ${tickers[ci]}: ${val.toFixed(4)}`;
+        td.addEventListener('click', () => openLightbox(rowT, tickers[ci], val));
       }
       tr.appendChild(td);
     });
@@ -822,9 +732,7 @@ function syncScrollbar() {
   const top   = document.getElementById('heatmap-scroll-top');
   const inner = document.getElementById('heatmap-scroll-top-inner');
   if (!outer || !top || !inner) return;
-  // Match inner width to table scroll width so the bar has the right range
   inner.style.width = outer.scrollWidth + 'px';
-  // Two-way sync without feedback loops
   let syncing = false;
   top.addEventListener('scroll', () => {
     if (syncing) return; syncing = true;
@@ -849,7 +757,6 @@ function loadMatrix(w) {
     })
     .catch(() => setTimeout(() => loadMatrix(w), 5000));
 }
-
 function setWindow(w) {
   currentWindow = w;
   document.getElementById('btn-21').classList.toggle('active', w === 21);
@@ -872,9 +779,7 @@ function pollStatus() {
 function openLightbox(t1, t2, currentVal) {
   document.getElementById('lb-title').textContent   = `${t1} vs ${t2}`;
   document.getElementById('lb-current').textContent = currentVal !== null ? currentVal.toFixed(4) : '—';
-  document.getElementById('lb-avg').textContent = '—';
-  document.getElementById('lb-min').textContent = '—';
-  document.getElementById('lb-max').textContent = '—';
+  ['lb-avg','lb-min','lb-max'].forEach(id => document.getElementById(id).textContent = '—');
   document.getElementById('lightbox').classList.remove('hidden');
   if (lightboxChart) { lightboxChart.destroy(); lightboxChart = null; }
 
@@ -906,25 +811,13 @@ function runCompare() {
   const t2  = document.getElementById('cmp-t2').value.trim().toUpperCase();
   const err = document.getElementById('cmp-error');
   const res = document.getElementById('cmp-result');
-
   err.classList.remove('visible');
   res.classList.remove('visible');
-
-  if (!t1 || !t2) {
-    err.textContent = 'Please enter two ticker symbols.';
-    err.classList.add('visible');
-    return;
-  }
-  if (t1 === t2) {
-    err.textContent = 'Please enter two different tickers.';
-    err.classList.add('visible');
-    return;
-  }
+  if (!t1 || !t2) { err.textContent = 'Please enter two ticker symbols.'; err.classList.add('visible'); return; }
+  if (t1 === t2)  { err.textContent = 'Please enter two different tickers.'; err.classList.add('visible'); return; }
 
   document.getElementById('cmp-title').textContent = `${t1} vs ${t2}`;
-  ['cmp-current','cmp-avg','cmp-min','cmp-max'].forEach(id => {
-    document.getElementById(id).textContent = '...';
-  });
+  ['cmp-current','cmp-avg','cmp-min','cmp-max'].forEach(id => document.getElementById(id).textContent = '...');
   res.classList.add('visible');
   if (compareChart) { compareChart.destroy(); compareChart = null; }
 
@@ -941,28 +834,19 @@ function runCompare() {
       const vals = pts.map(p => p.value);
       const avg  = vals.reduce((a,b) => a+b, 0) / vals.length;
       const last = vals[vals.length - 1];
-
-      const colorVal = v => v > 0.5 ? '#7f1d1d' : v < -0.3 ? '#1e3a5f' : '#374151';
+      const col  = v => v > 0.5 ? '#7f1d1d' : v < -0.3 ? '#1e3a5f' : '#374151';
       document.getElementById('cmp-current').textContent = last.toFixed(4);
-      document.getElementById('cmp-current').style.color = colorVal(last);
+      document.getElementById('cmp-current').style.color = col(last);
       document.getElementById('cmp-avg').textContent     = avg.toFixed(4);
-      document.getElementById('cmp-avg').style.color     = colorVal(avg);
+      document.getElementById('cmp-avg').style.color     = col(avg);
       document.getElementById('cmp-min').textContent     = Math.min(...vals).toFixed(4);
       document.getElementById('cmp-max').textContent     = Math.max(...vals).toFixed(4);
-
       compareChart = makeLineChart('compare-chart', pts.map(p => p.date), vals, `${t1} / ${t2} rolling 21-day correlation`);
     })
-    .catch(() => {
-      err.textContent = 'Request failed. Please try again.';
-      err.classList.add('visible');
-    });
+    .catch(() => { err.textContent = 'Request failed. Please try again.'; err.classList.add('visible'); });
 }
-
-// Enter key on compare inputs
 ['cmp-t1','cmp-t2'].forEach(id => {
-  document.getElementById(id).addEventListener('keydown', e => {
-    if (e.key === 'Enter') runCompare();
-  });
+  document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') runCompare(); });
 });
 
 // ── Shared chart factory ──────────────────────────────────────────────────────
@@ -973,38 +857,24 @@ function makeLineChart(canvasId, labels, values, label) {
     data: {
       labels,
       datasets: [{
-        label,
-        data: values,
-        borderColor: '#1a56db',
-        backgroundColor: 'rgba(26,86,219,.06)',
-        borderWidth: 2,
-        pointRadius: 0,
-        pointHoverRadius: 4,
-        fill: true,
-        tension: 0.3,
+        label, data: values,
+        borderColor: '#1a56db', backgroundColor: 'rgba(26,86,219,.06)',
+        borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, fill: true, tension: 0.3,
       }]
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       scales: {
-        x: {
-          ticks: { maxTicksLimit: 8, font: { family: "'DM Mono', monospace", size: 10 }, color: '#8898aa' },
-          grid:  { color: '#e2e8f2' },
-        },
-        y: {
-          min: -1, max: 1,
-          ticks: { stepSize: 0.25, font: { family: "'DM Mono', monospace", size: 10 }, color: '#8898aa' },
-          grid:  { color: '#e2e8f2' },
-        },
+        x: { ticks: { maxTicksLimit: 8, font: { family: "'DM Mono',monospace", size: 10 }, color: '#8898aa' }, grid: { color: '#e2e8f2' } },
+        y: { min: -1, max: 1, ticks: { stepSize: 0.25, font: { family: "'DM Mono',monospace", size: 10 }, color: '#8898aa' }, grid: { color: '#e2e8f2' } },
       },
       plugins: {
         legend: { display: false },
         tooltip: {
           backgroundColor: '#0f1a2e',
-          titleFont: { family: "'Sora', sans-serif", size: 11 },
-          bodyFont:  { family: "'DM Mono', monospace", size: 12 },
+          titleFont: { family: "'Sora',sans-serif", size: 11 },
+          bodyFont:  { family: "'DM Mono',monospace", size: 12 },
           callbacks: { label: c => ` Correlation: ${c.parsed.y.toFixed(4)}` },
         },
       },
@@ -1017,19 +887,16 @@ function buildExtremes(data) {
   const { tickers, matrix, window: w } = data;
   const note = document.getElementById('ext-window-note');
   if (note) note.textContent = `Based on ${w === 5 ? '1-Week (5-day)' : '1-Month (21-day)'} window`;
-
   const pairs = [];
-  for (let i = 0; i < tickers.length; i++) {
+  for (let i = 0; i < tickers.length; i++)
     for (let j = i + 1; j < tickers.length; j++) {
       const v = matrix[i][j];
       if (v !== null && !isNaN(v)) pairs.push({ t1: tickers[i], t2: tickers[j], val: v });
     }
-  }
   pairs.sort((a, b) => b.val - a.val);
   renderExtTable('ext-high-body', pairs.slice(0, 5));
   renderExtTable('ext-low-body',  pairs.slice(-5).reverse());
 }
-
 function renderExtTable(bodyId, pairs) {
   const tbody = document.getElementById(bodyId);
   if (!tbody) return;
@@ -1037,27 +904,13 @@ function renderExtTable(bodyId, pairs) {
   pairs.forEach(({ t1, t2, val }) => {
     const tr = document.createElement('tr');
     tr.addEventListener('click', () => openLightbox(t1, t2, val));
-
-    const tdP = document.createElement('td');
-    tdP.className   = 'ext-pair';
-    tdP.textContent = `${t1} / ${t2}`;
-
-    const tdV  = document.createElement('td');
-    tdV.className   = 'ext-val';
+    const tdP = document.createElement('td'); tdP.className = 'ext-pair'; tdP.textContent = `${t1} / ${t2}`;
+    const tdV = document.createElement('td'); tdV.className = 'ext-val';
     tdV.style.color = val > 0.5 ? '#7f1d1d' : val < -0.3 ? '#1e3a5f' : '#374151';
-    const sw        = document.createElement('span');
-    sw.className    = 'ext-swatch';
-    sw.style.background = corrColor(val);
-    tdV.textContent = val.toFixed(2);
-    tdV.appendChild(sw);
-
-    const tdA = document.createElement('td');
-    tdA.className   = 'ext-arrow';
-    tdA.textContent = '›';
-
-    tr.appendChild(tdP);
-    tr.appendChild(tdV);
-    tr.appendChild(tdA);
+    const sw = document.createElement('span'); sw.className = 'ext-swatch'; sw.style.background = corrColor(val);
+    tdV.textContent = val.toFixed(2); tdV.appendChild(sw);
+    const tdA = document.createElement('td'); tdA.className = 'ext-arrow'; tdA.textContent = '›';
+    tr.appendChild(tdP); tr.appendChild(tdV); tr.appendChild(tdA);
     tbody.appendChild(tr);
   });
 }
@@ -1068,11 +921,8 @@ function confirmRefresh() {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-if ('{{ status }}' === 'ready') {
-  loadMatrix(21);
-} else {
-  pollStatus();
-}
+if ('{{ status }}' === 'ready') { loadMatrix(21); }
+else { pollStatus(); }
 </script>
 </body>
 </html>
