@@ -1,6 +1,6 @@
 """
 Asset Correlation Dashboard
-- 44 ETFs, 21-day and 5-day rolling correlations
+- 45 ETFs, 21-day and 5-day rolling correlations
 - Data: yFinance (91 trading days of daily closes)
 - Cache: Upstash Redis (refreshed nightly via cron)
 - Deploy: Dokku on Digital Ocean, domain: corr.market-dashboards.com
@@ -24,11 +24,10 @@ REDIS_TOKEN = os.environ.get("UPSTASH_REDIS_REST_TOKEN", "")
 REDIS_KEY   = "corr_dashboard_v3"
 
 TICKERS = sorted([
-    "CHIQ","CIBR","CPER","DBA","DBC","EEM","EMB","FXI","GLD","HYG",
-    "IBIT","IEF","IJH","INDA","ITA","IWD","IWF","IWM","KRE","KWEB",
-    "MGK","MOAT","MUB","PAVE","QQQ","SDY","SHY","SLV","SMH","SPY",
-    "TLT","USO","UUP","XLB","XLC","XLE","XLF","XLI","XLK","XLP",
-    "XLRE","XLU","XLV","XLY",
+    "AGG","DBC","EEM","EMB","EMXC","EWJ","EWU","FEZ","FXI","GLD","GSY",
+    "IBIT","IEF","IJH","INDA","IWM","LQD","MGK","MUB","QQQ","SDY","SLV",
+    "SPHB","SPLV","SPMO","SPY","SPYG","SPYV","TIP","USO","UUP","VGK",
+    "XLB","XLC","XLE","XLF","XLI","XLK","XLP","XLRE","XLU","XLV","XLY","XRT","XTN"
 ])
 
 cache = {
