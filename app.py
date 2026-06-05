@@ -13,7 +13,6 @@ import numpy as np
 import json
 import os
 import threading
-import time
 from datetime import datetime, date, timedelta
 from zoneinfo import ZoneInfo
 
@@ -22,17 +21,8 @@ CT = ZoneInfo("America/Chicago")
 
 REDIS_URL   = os.environ.get("UPSTASH_REDIS_REST_URL", "")
 REDIS_TOKEN = os.environ.get("UPSTASH_REDIS_REST_TOKEN", "")
-REDIS_KEY   = "corr_dashboard_v2"
+REDIS_KEY   = "corr_dashboard_v3"
 
-# 44 ETFs from the ETF Volume dashboard
-TICKERS = sorted([
-    "AIQ","CHIQ","CIBR","CPER","CWB","DBA","DBC","DXJ","EEM","EMB",
-    "EMXC","EWJ","FEZ","FXI","GLD","HYG","IBIT","IEF","IJH","INDA",
-    "ITA","IWD","IWF","IWM","KRE","KWEB","MGK","MOAT","MUB","PAVE",
-    "QQQ","SDY","SHY","SLV","SMH","SPY","TLT","USO","UUP","XLB",
-    "XLC","XLE","XLF","XLI","XLK","XLP","XLRE","XLU","XLV","XLY",
-])
-# Trim to 44 -- remove 6 least-interesting for a cleaner matrix
 TICKERS = sorted([
     "CHIQ","CIBR","CPER","DBA","DBC","EEM","EMB","FXI","GLD","HYG",
     "IBIT","IEF","IJH","INDA","ITA","IWD","IWF","IWM","KRE","KWEB",
@@ -42,36 +32,38 @@ TICKERS = sorted([
 ])
 
 cache = {
-    "prices": None,
+    "prices":       None,
     "last_updated": None,
-    "status": "idle",
-    "error": None,
+    "status":       "idle",
+    "error":        None,
 }
 _lock    = threading.Lock()
 _started = False
 
 
 # ── Redis helpers ──────────────────────────────────────────────────────────────
+# Upstash REST API correct usage:
+#   SET with expiry: POST {REDIS_URL}/set/{key}/{value}?EX={seconds}
+#   The value must be URL-safe, so we base64-encode the JSON payload.
+# GET:              GET  {REDIS_URL}/get/{key}
+#   Returns {"result": "<value string>"}
 
 def redis_set(key, value, ex_seconds=90000):
     if not REDIS_URL or not REDIS_TOKEN:
         return False
     try:
-        # Upstash REST API: POST /set/KEY with raw string body
-        encoded = json.dumps(value)
+        import base64
+        # Serialise to JSON string then base64 so it is URL/path safe
+        json_str = json.dumps(value, separators=(',', ':'))
+        b64_val  = base64.urlsafe_b64encode(json_str.encode()).decode()
+        url = f"{REDIS_URL}/set/{key}/{b64_val}"
         r = requests.post(
-            f"{REDIS_URL}/set/{key}",
-            headers={
-                "Authorization": f"Bearer {REDIS_TOKEN}",
-                "Content-Type":  "application/json",
-            },
-            # Upstash expects: ["SET", key, value, "EX", seconds]
-            # Via REST pipeline or direct set endpoint with query params
-            params={"ex": ex_seconds},
-            data=encoded,
-            timeout=15,
+            url,
+            headers={"Authorization": f"Bearer {REDIS_TOKEN}"},
+            params={"EX": ex_seconds},
+            timeout=20,
         )
-        print(f"Redis SET status: {r.status_code} {r.text[:80]}")
+        print(f"Redis SET {r.status_code}: {r.text[:120]}")
         return r.status_code == 200
     except Exception as e:
         print(f"Redis SET error: {e}")
@@ -82,17 +74,21 @@ def redis_get(key):
     if not REDIS_URL or not REDIS_TOKEN:
         return None
     try:
+        import base64
         r = requests.get(
             f"{REDIS_URL}/get/{key}",
             headers={"Authorization": f"Bearer {REDIS_TOKEN}"},
             timeout=15,
         )
         if r.status_code != 200:
+            print(f"Redis GET {r.status_code}: {r.text[:80]}")
             return None
         result = r.json().get("result")
         if result is None:
             return None
-        return json.loads(result)
+        # Decode base64 then parse JSON
+        json_str = base64.urlsafe_b64decode(result.encode()).decode()
+        return json.loads(json_str)
     except Exception as e:
         print(f"Redis GET error: {e}")
         return None
@@ -112,34 +108,25 @@ def redis_del(key):
 
 
 def save_to_redis(prices_dict, last_updated):
-    payload = {
-        "prices":       prices_dict,
-        "last_updated": last_updated,
-    }
-    serialised = json.dumps(payload)
-    ok = redis_set(REDIS_KEY, serialised)
-    print(f"Redis save: {'OK' if ok else 'FAILED'} ({len(serialised)//1024} KB)")
+    payload = {"prices": prices_dict, "last_updated": last_updated}
+    ok = redis_set(REDIS_KEY, payload)
+    kb = len(json.dumps(payload)) // 1024
+    print(f"Redis save: {'OK' if ok else 'FAILED'} ({kb} KB)")
     return ok
 
 
 def load_from_redis():
     print("Checking Redis for cached prices...")
-    raw = redis_get(REDIS_KEY)
-    if not raw:
+    data = redis_get(REDIS_KEY)
+    if not data:
         print("No Redis cache found.")
         return None, None
-    # raw may be a dict (already parsed) or a JSON string (double-encoded)
-    if isinstance(raw, str):
-        try:
-            raw = json.loads(raw)
-        except Exception:
-            print("Redis data malformed.")
-            return None, None
-    prices_dict  = raw.get("prices")
-    last_updated = raw.get("last_updated")
+    prices_dict  = data.get("prices")
+    last_updated = data.get("last_updated")
     if prices_dict and last_updated:
         print(f"Redis restored {len(prices_dict)} tickers (updated {last_updated})")
         return prices_dict, last_updated
+    print("Redis cache malformed.")
     return None, None
 
 
@@ -147,14 +134,11 @@ def load_from_redis():
 
 def fetch_prices():
     import yfinance as yf
-
     end   = date.today()
-    start = end - timedelta(days=150)  # ~91 trading days + buffer
-
+    start = end - timedelta(days=150)
     print(f"Downloading {len(TICKERS)} tickers {start} -> {end}...")
     with _lock:
         cache["status"] = "Downloading price data..."
-
     try:
         raw = yf.download(
             tickers=TICKERS,
@@ -172,16 +156,11 @@ def fetch_prices():
         return None
 
     closes = raw["Close"] if isinstance(raw.columns, pd.MultiIndex) else raw[["Close"]]
-
-    # Sanitise: weekdays only, forward-fill gaps (holidays, long weekends)
-    closes = closes[closes.index.dayofweek < 5]
-    closes = closes.ffill()
-    closes = closes.tail(91)
-
-    # Drop tickers with >10% missing
+    closes = closes[closes.index.dayofweek < 5]   # weekdays only
+    closes = closes.ffill()                        # fill holidays/long weekends
+    closes = closes.tail(91)                       # keep 91 trading days
     closes = closes.dropna(axis=1, thresh=int(0.90 * len(closes)))
     closes = closes.ffill().bfill()
-
     print(f"Prices ready: {len(closes)} days x {len(closes.columns)} tickers")
     return closes
 
@@ -207,7 +186,6 @@ def run_update():
         cache["error"]  = None
 
     prices = fetch_prices()
-
     if prices is None or prices.empty:
         with _lock:
             cache["status"] = "error"
@@ -243,10 +221,8 @@ def _ensure_started():
     if _started:
         return
     _started = True
-
     prices_dict, last_updated = load_from_redis()
     if prices_dict:
-        # Check staleness: refresh if data is >3 days old
         stale = True
         try:
             parts   = last_updated.split(" ")[0].split("/")
@@ -254,14 +230,12 @@ def _ensure_started():
             stale   = (date.today() - lu_date).days > 3
         except Exception:
             pass
-
         with _lock:
             cache["prices"]       = prices_dict
             cache["last_updated"] = last_updated
             cache["status"]       = "ready"
-
         if stale:
-            print("Cache stale — refreshing in background...")
+            print("Cache stale — refreshing...")
             trigger_update()
         else:
             print("Cache fresh — serving from Redis.")
@@ -292,12 +266,10 @@ def api_matrix():
     window = request.args.get("window", 21, type=int)
     if window not in (5, 21):
         window = 21
-
     with _lock:
         prices_dict  = cache["prices"]
         last_updated = cache["last_updated"]
         status       = cache["status"]
-
     if not prices_dict:
         return jsonify({"error": "Data not ready", "status": status}), 503
 
@@ -310,13 +282,13 @@ def api_matrix():
     matrix  = [
         [
             round(float(corr.loc[t1, t2]), 4)
-            if (t1 in corr.index and t2 in corr.columns and not np.isnan(corr.loc[t1, t2]))
+            if (t1 in corr.index and t2 in corr.columns
+                and not np.isnan(corr.loc[t1, t2]))
             else None
             for t2 in tickers
         ]
         for t1 in tickers
     ]
-
     return jsonify({
         "tickers":      tickers,
         "matrix":       matrix,
@@ -329,10 +301,8 @@ def api_matrix():
 def api_rolling():
     t1 = request.args.get("t1", "").upper().strip()
     t2 = request.args.get("t2", "").upper().strip()
-
     with _lock:
         prices_dict = cache["prices"]
-
     if not prices_dict:
         return jsonify({"error": "Data not ready"}), 503
 
